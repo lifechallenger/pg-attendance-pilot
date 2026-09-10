@@ -544,8 +544,6 @@
 
     </div>
 
-  </div>
-
 
     <div id="employeeTools" class="employee-tools">
       <div class="employee-tools-row">
@@ -566,12 +564,12 @@
                 onclick="openInfoModal()"
                 title="Rules & Penalties"
                 aria-label="Rules and penalties">
-          ⓘ
+          &#9432;
         </button>
       </div>
     </div>
 
-
+  </div>
 
 
   <!-- =====================================================
@@ -626,7 +624,7 @@
       </div>
       <div id="summaryLeavePenalty"
            class="summary-penalty-value">
-        ₹0
+        &#8377;0
       </div>
     </div>
 
@@ -702,21 +700,21 @@
 
       Latitude:
       <strong id="latitude">
-        —
+        &mdash;
       </strong>
 
       <br>
 
       Longitude:
       <strong id="longitude">
-        —
+        &mdash;
       </strong>
 
       <br>
 
       Accuracy:
       <strong id="accuracy">
-        —
+        &mdash;
       </strong>
 
     </div>
@@ -805,6 +803,139 @@
     Room Attendance System
   </footer>
 
+</div>
+
+
+<!-- Hidden POST target used by postSelfService() for submitLeave / submitResignation -->
+<iframe name="selfServicePostFrame"
+        id="selfServicePostFrame"
+        style="display:none"></iframe>
+
+
+<!-- =====================================================
+     APPLY LEAVE MODAL
+     ===================================================== -->
+<div id="leaveModal"
+     class="modal-backdrop"
+     onclick="backdropClose(event,'leaveModal')">
+
+  <div class="self-modal">
+
+    <div id="leaveFormView">
+
+      <div class="modal-header">
+        <h2 class="modal-title">Apply Leave</h2>
+        <button class="modal-close" type="button"
+                onclick="closeModal('leaveModal')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="leaveStart">Start date</label>
+        <input type="date" id="leaveStart" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="leaveEnd">End date</label>
+        <input type="date" id="leaveEnd" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="leaveType">Leave type</label>
+        <select id="leaveType" class="form-control">
+          <option value="">Select leave type</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="leaveProof">Proof (optional)</label>
+        <input type="file" id="leaveProof" class="form-control" accept="image/*">
+        <div class="form-hint">
+          JPG, PNG or WebP. The image is compressed automatically before upload.
+        </div>
+      </div>
+
+      <div id="leaveMessage" class="form-message"></div>
+
+      <button id="leaveReviewButton" class="primary" type="button"
+              onclick="reviewLeave()">
+        Review &amp; Calculate Penalty
+      </button>
+
+    </div>
+
+    <div id="leaveConfirmView" class="hidden"></div>
+
+  </div>
+</div>
+
+
+<!-- =====================================================
+     RESIGNATION MODAL
+     ===================================================== -->
+<div id="resignationModal"
+     class="modal-backdrop"
+     onclick="backdropClose(event,'resignationModal')">
+
+  <div class="self-modal">
+
+    <div id="resignationFormView">
+
+      <div class="modal-header">
+        <h2 class="modal-title">Resignation</h2>
+        <button class="modal-close" type="button"
+                onclick="closeModal('resignationModal')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="resignationDate">Resignation date</label>
+        <input type="date" id="resignationDate" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reasonCategory">Reason category</label>
+        <select id="reasonCategory" class="form-control">
+          <option value="">Select reason</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="detailedReason">Detailed reason</label>
+        <textarea id="detailedReason" class="form-control"></textarea>
+      </div>
+
+      <div id="resignationMessage" class="form-message"></div>
+
+      <button class="primary" type="button"
+              onclick="reviewResignation()">
+        Review &amp; Calculate Penalty
+      </button>
+
+    </div>
+
+    <div id="resignationConfirmView" class="hidden"></div>
+
+  </div>
+</div>
+
+
+<!-- =====================================================
+     RULES / INFO MODAL
+     ===================================================== -->
+<div id="infoModal"
+     class="modal-backdrop"
+     onclick="backdropClose(event,'infoModal')">
+
+  <div class="self-modal">
+
+    <div class="modal-header">
+      <h2 class="modal-title">Rules &amp; Penalties</h2>
+      <button class="modal-close" type="button"
+              onclick="closeModal('infoModal')">&times;</button>
+    </div>
+
+    <div id="rulesContent"></div>
+
+  </div>
 </div>
 
 
@@ -1716,7 +1847,7 @@ const BACKEND_TIMEOUT_MS = 20000;
     view.innerHTML =
       '<div class="modal-header">' +
         '<h2 class="modal-title">Confirm Leave Application</h2>' +
-        '<button class="modal-close" type="button" onclick="closeModal(\'leaveModal\')">×</button>' +
+        '<button class="modal-close" type="button" onclick="closeModal(\'leaveModal\')">&times;</button>' +
       '</div>' +
 
       '<div class="confirmation-box">' +
@@ -1764,7 +1895,7 @@ const BACKEND_TIMEOUT_MS = 20000;
 
       '<div class="modal-actions">' +
         '<button class="secondary" type="button" onclick="cancelLeaveReview()">Cancel</button>' +
-        '<button class="primary" type="button" onclick="submitLeaveConfirmed()">Confirm & Submit</button>' +
+        '<button class="primary" type="button" onclick="submitLeaveConfirmed()">Confirm &amp; Submit</button>' +
       '</div>';
 
   }
@@ -2036,7 +2167,7 @@ const BACKEND_TIMEOUT_MS = 20000;
     view.innerHTML =
       '<div class="modal-header">' +
         '<h2 class="modal-title">Confirm Resignation</h2>' +
-        '<button class="modal-close" type="button" onclick="closeModal(\'resignationModal\')">×</button>' +
+        '<button class="modal-close" type="button" onclick="closeModal(\'resignationModal\')">&times;</button>' +
       '</div>' +
 
       '<div class="confirmation-box">' +
@@ -2074,7 +2205,7 @@ const BACKEND_TIMEOUT_MS = 20000;
 
       '<div class="modal-actions">' +
         '<button class="secondary" type="button" onclick="cancelResignationReview()">Cancel</button>' +
-        '<button class="primary" type="button" onclick="submitResignationConfirmed()">Confirm & Submit</button>' +
+        '<button class="primary" type="button" onclick="submitResignationConfirmed()">Confirm &amp; Submit</button>' +
       '</div>';
 
     view.dataset.detailReason =
@@ -3271,7 +3402,7 @@ const BACKEND_TIMEOUT_MS = 20000;
         const success = !!(result && result.success);
 
         /*
-         * On a successful scan, show only the tick and title —
+         * On a successful scan, show only the tick and title --
          * no user name, room, distance, or timestamp. Those are
          * already recorded in the Attendance sheet; showing them
          * on-screen serves no purpose and exposes another
