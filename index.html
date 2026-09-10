@@ -573,6 +573,54 @@
 
 
   <!-- =====================================================
+       QR SCANNER
+       ===================================================== -->
+
+  <div id="scannerCard"
+       class="card hidden">
+
+    <div class="title">
+      2. Scan Room QR Code
+    </div>
+
+    <div id="scannerPlaceholder"
+         class="placeholder">
+
+      Press "Start Camera" to begin scanning.
+
+    </div>
+
+    <div id="reader"
+         class="hidden">
+    </div>
+
+    <button id="startButton"
+            class="primary"
+            onclick="startScanner()">
+
+      Start Camera
+
+    </button>
+
+    <button id="stopButton"
+            class="secondary hidden"
+            onclick="stopScanner()">
+
+      Stop Camera
+
+    </button>
+
+    <div id="scanStatus"
+         class="status info">
+
+      Camera is not running.
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
        MY SUMMARY
        ===================================================== -->
 
@@ -626,53 +674,6 @@
            class="summary-penalty-value">
         &#8377;0
       </div>
-    </div>
-
-  </div>
-
-  <!-- =====================================================
-       QR SCANNER
-       ===================================================== -->
-
-  <div id="scannerCard"
-       class="card hidden">
-
-    <div class="title">
-      2. Scan Room QR Code
-    </div>
-
-    <div id="scannerPlaceholder"
-         class="placeholder">
-
-      Press "Start Camera" to begin scanning.
-
-    </div>
-
-    <div id="reader"
-         class="hidden">
-    </div>
-
-    <button id="startButton"
-            class="primary"
-            onclick="startScanner()">
-
-      Start Camera
-
-    </button>
-
-    <button id="stopButton"
-            class="secondary hidden"
-            onclick="stopScanner()">
-
-      Stop Camera
-
-    </button>
-
-    <div id="scanStatus"
-         class="status info">
-
-      Camera is not running.
-
     </div>
 
   </div>
