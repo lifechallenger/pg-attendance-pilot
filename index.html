@@ -254,6 +254,250 @@
       margin-top: 20px;
     }
 
+
+    /* =====================================================
+       EMPLOYEE SELF-SERVICE UI
+       ===================================================== */
+
+    .employee-tools {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #edf0f2;
+    }
+
+    .employee-tools-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 42px;
+      gap: 8px;
+    }
+
+    .employee-tool-btn {
+      margin-top: 0;
+      min-height: 42px;
+      padding: 10px 8px;
+      font-size: 13px;
+    }
+
+    .employee-info-btn {
+      padding: 8px;
+      font-size: 19px;
+    }
+
+    .summary-card {
+      display: none;
+    }
+
+    .summary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .summary-refresh {
+      width: auto;
+      margin: 0;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .summary-item {
+      background: #f7f9fc;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .summary-label {
+      color: #5f6368;
+      font-size: 11px;
+    }
+
+    .summary-value {
+      margin-top: 3px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .summary-penalty {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff8e1;
+      border-radius: 10px;
+    }
+
+    .summary-penalty-label {
+      color: #5f6368;
+      font-size: 11px;
+    }
+
+    .summary-penalty-value {
+      margin-top: 3px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(32,33,36,.55);
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .self-modal {
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: auto;
+      margin: 0;
+      padding: 2px 8px;
+      background: transparent;
+      color: #5f6368;
+      font-size: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .form-control {
+      width: 100%;
+      border: 1px solid #dadce0;
+      border-radius: 9px;
+      padding: 11px;
+      font: inherit;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    textarea.form-control {
+      min-height: 105px;
+      resize: vertical;
+    }
+
+    .form-hint {
+      margin-top: 5px;
+      color: #80868b;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .form-message {
+      margin-top: 8px;
+      color: #5f6368;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .warning-box {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #f9ab00;
+      border-radius: 10px;
+      background: #fff8e1;
+      color: #5f4300;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .confirmation-box {
+      padding: 12px;
+      border-radius: 10px;
+      background: #f8f9fa;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .modal-actions button {
+      margin-top: 0;
+    }
+
+    .rules-row {
+      padding: 10px 0;
+      border-bottom: 1px solid #edf0f2;
+    }
+
+    .rules-row:last-child {
+      border-bottom: 0;
+    }
+
+    .rules-title {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .rules-text {
+      margin-top: 4px;
+      color: #5f6368;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 380px) {
+      .employee-tools-row {
+        grid-template-columns: 1fr 1fr 40px;
+      }
+
+      .employee-tool-btn {
+        font-size: 12px;
+        padding-left: 5px;
+        padding-right: 5px;
+      }
+    }
+
   </style>
 </head>
 
@@ -302,6 +546,91 @@
 
   </div>
 
+
+    <div id="employeeTools" class="employee-tools">
+      <div class="employee-tools-row">
+        <button class="secondary employee-tool-btn"
+                type="button"
+                onclick="openLeaveModal()">
+          Apply Leave
+        </button>
+
+        <button class="secondary employee-tool-btn"
+                type="button"
+                onclick="openResignationModal()">
+          Resignation
+        </button>
+
+        <button class="secondary employee-tool-btn employee-info-btn"
+                type="button"
+                onclick="openInfoModal()"
+                title="Rules & Penalties"
+                aria-label="Rules and penalties">
+          ⓘ
+        </button>
+      </div>
+    </div>
+
+
+
+
+  <!-- =====================================================
+       MY SUMMARY
+       ===================================================== -->
+
+  <div id="summaryCard" class="card summary-card">
+
+    <div class="summary-header">
+      <div class="title" style="margin-bottom:0;">
+        My Summary
+      </div>
+
+      <button class="secondary summary-refresh"
+              type="button"
+              onclick="refreshEmployeeSummary()">
+        Refresh
+      </button>
+    </div>
+
+    <div class="summary-grid">
+
+      <div class="summary-item">
+        <div class="summary-label">Leave days this month</div>
+        <div id="summaryLeaveDays" class="summary-value">0</div>
+      </div>
+
+      <div class="summary-item">
+        <div class="summary-label">Leave applications</div>
+        <div id="summaryLeaveApps" class="summary-value">0</div>
+      </div>
+
+      <div class="summary-item">
+        <div class="summary-label">Accepted applications</div>
+        <div id="summaryAccepted" class="summary-value">0 / 2</div>
+      </div>
+
+      <div class="summary-item">
+        <div class="summary-label">Resignation</div>
+        <div id="summaryResignation"
+             class="summary-value"
+             style="font-size:14px;">
+          None
+        </div>
+      </div>
+
+    </div>
+
+    <div class="summary-penalty">
+      <div class="summary-penalty-label">
+        Total leave penalty
+      </div>
+      <div id="summaryLeavePenalty"
+           class="summary-penalty-value">
+        ₹0
+      </div>
+    </div>
+
+  </div>
 
   <!-- =====================================================
        QR SCANNER
@@ -486,7 +815,7 @@
      ===================================================== */
 
   const GOOGLE_CLIENT_ID =
-    '467836469491-fe7gpq5l2altnjibkjn6bbdrddr5nuhn.apps.googleusercontent.com';
+    '802356095167-6hnm5bt2irke0mg7idv17132lsbtknct.apps.googleusercontent.com';
 
 
   /*
@@ -495,7 +824,7 @@
    */
 
 const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbxlIchgA9XfdjG-F69Uh5MP3NlnvJ3IKnaqfA-BmPsSsh5a4_YW6lysWj3PzIH6R4kj/exec';
+  'https://script.google.com/macros/s/AKfycbwN-DgEtPMTX8lp2enzvYMSzoWjeCPDtxBAhzSCVxsJ7rnKkzVDEoG3H5s28lSkjgtL0A/exec';
 
 
   /*
@@ -782,6 +1111,1343 @@ const BACKEND_TIMEOUT_MS = 20000;
     }
 
   }
+
+
+
+  /* =====================================================
+     EMPLOYEE SELF-SERVICE
+     ===================================================== */
+
+  let selfServiceConfig = null;
+  let pendingLeave = null;
+  let pendingResignation = null;
+  let pendingLeaveProof = null;
+
+  function localTodayKey() {
+
+    const now = new Date();
+
+    return new Date(
+      now.getTime() -
+      now.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 10);
+
+  }
+
+  function money(value) {
+
+    return '₹' +
+      Number(value || 0)
+        .toLocaleString('en-IN');
+
+  }
+
+  function escapeHtml(value) {
+
+    return String(
+      value == null ? '' : value
+    )
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  }
+
+  function selfServiceJsonp(
+    action,
+    extra
+  ) {
+
+    return submitViaJsonp(
+      Object.assign(
+        {
+          action: action,
+          googleIdToken: googleIdToken
+        },
+        extra || {}
+      )
+    );
+
+  }
+
+  function loadSelfServiceConfig() {
+
+    if (!googleIdToken) return;
+
+    selfServiceJsonp(
+      'getSelfServiceConfig'
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success
+        ) {
+          throw new Error(
+            result && result.message
+              ? result.message
+              : 'Unable to load employee services.'
+          );
+        }
+
+        selfServiceConfig = result;
+
+        document
+          .getElementById(
+            'employeeTools'
+          )
+          .style.display = 'block';
+
+        populateSelfServiceLists();
+
+        renderEmployeeSummary(
+          result.userSummary
+        );
+
+      })
+      .catch(function(error) {
+
+        console.warn(
+          'Employee self-service load failed:',
+          error
+        );
+
+      });
+
+  }
+
+  function populateSelfServiceLists() {
+
+    if (!selfServiceConfig) return;
+
+    const leaveType =
+      document.getElementById(
+        'leaveType'
+      );
+
+    leaveType.innerHTML =
+      '<option value="">Select leave type</option>';
+
+    (
+      selfServiceConfig.leaveTypes || []
+    ).forEach(function(item) {
+
+      const option =
+        document.createElement(
+          'option'
+        );
+
+      option.value = item;
+      option.textContent = item;
+
+      leaveType.appendChild(
+        option
+      );
+
+    });
+
+    const reason =
+      document.getElementById(
+        'reasonCategory'
+      );
+
+    reason.innerHTML =
+      '<option value="">Select reason</option>';
+
+    (
+      selfServiceConfig.resignationReasons || []
+    ).forEach(function(item) {
+
+      const option =
+        document.createElement(
+          'option'
+        );
+
+      option.value = item;
+      option.textContent = item;
+
+      reason.appendChild(
+        option
+      );
+
+    });
+
+  }
+
+  function renderEmployeeSummary(
+    summary
+  ) {
+
+    if (!summary) return;
+
+    document.getElementById(
+      'summaryCard'
+    ).style.display = 'block';
+
+    document.getElementById(
+      'summaryLeaveDays'
+    ).textContent =
+      Number(
+        summary.leaveDaysThisMonth || 0
+      );
+
+    document.getElementById(
+      'summaryLeaveApps'
+    ).textContent =
+      Number(
+        summary.leaveApplicationsThisMonth || 0
+      );
+
+    document.getElementById(
+      'summaryAccepted'
+    ).textContent =
+      Number(
+        summary.acceptedLeaveApplicationsThisMonth || 0
+      ) +
+      ' / ' +
+      Number(
+        summary.monthlyLeaveLimit || 0
+      );
+
+    document.getElementById(
+      'summaryResignation'
+    ).textContent =
+      summary.resignationStatus ||
+      'None';
+
+    document.getElementById(
+      'summaryLeavePenalty'
+    ).textContent =
+      money(
+        summary.leavePenaltyThisMonth
+      );
+
+  }
+
+  function refreshEmployeeSummary() {
+
+    loadSelfServiceConfig();
+
+  }
+
+  function openLeaveModal() {
+
+    if (!googleIdToken) return;
+
+    closeAllModals();
+
+    const today =
+      localTodayKey();
+
+    document.getElementById(
+      'leaveStart'
+    ).min = today;
+
+    document.getElementById(
+      'leaveEnd'
+    ).min = today;
+
+    document.getElementById(
+      'leaveStart'
+    ).value = '';
+
+    document.getElementById(
+      'leaveEnd'
+    ).value = '';
+
+    document.getElementById(
+      'leaveType'
+    ).value = '';
+
+    document.getElementById(
+      'leaveProof'
+    ).value = '';
+
+    pendingLeave = null;
+    pendingLeaveProof = null;
+
+    document.getElementById(
+      'leaveFormView'
+    ).classList.remove('hidden');
+
+    document.getElementById(
+      'leaveConfirmView'
+    ).classList.add('hidden');
+
+    setFormMessage(
+      'leaveMessage',
+      '',
+      ''
+    );
+
+    document
+      .getElementById(
+        'leaveModal'
+      )
+      .classList.add('show');
+
+  }
+
+  function readProofFile(
+    file
+  ) {
+
+    return new Promise(
+      function(resolve, reject) {
+
+        if (!file) {
+          resolve(null);
+          return;
+        }
+
+        if (
+          !String(file.type || '')
+            .toLowerCase()
+            .startsWith('image/')
+        ) {
+
+          reject(
+            new Error(
+              'Proof must be an image file.'
+            )
+          );
+
+          return;
+        }
+
+        const reader =
+          new FileReader();
+
+        reader.onerror =
+          function() {
+
+            reject(
+              new Error(
+                'Could not read the proof image.'
+              )
+            );
+
+          };
+
+        reader.onload =
+          function() {
+
+            const img =
+              new Image();
+
+            img.onerror =
+              function() {
+
+                reject(
+                  new Error(
+                    'Could not process the proof image.'
+                  )
+                );
+
+              };
+
+            img.onload =
+              function() {
+
+                const maxDimension =
+                  1200;
+
+                const scale =
+                  Math.min(
+                    1,
+                    maxDimension /
+                      Math.max(
+                        img.width,
+                        img.height
+                      )
+                  );
+
+                const width =
+                  Math.max(
+                    1,
+                    Math.round(
+                      img.width * scale
+                    )
+                  );
+
+                const height =
+                  Math.max(
+                    1,
+                    Math.round(
+                      img.height * scale
+                    )
+                  );
+
+                const canvas =
+                  document.createElement(
+                    'canvas'
+                  );
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx =
+                  canvas.getContext(
+                    '2d'
+                  );
+
+                ctx.drawImage(
+                  img,
+                  0,
+                  0,
+                  width,
+                  height
+                );
+
+                let quality = 0.65;
+
+                let dataUrl =
+                  canvas.toDataURL(
+                    'image/jpeg',
+                    quality
+                  );
+
+                while (
+                  dataUrl.length > 800000 &&
+                  quality > 0.35
+                ) {
+
+                  quality -= 0.08;
+
+                  dataUrl =
+                    canvas.toDataURL(
+                      'image/jpeg',
+                      quality
+                    );
+
+                }
+
+                if (
+                  dataUrl.length > 900000
+                ) {
+
+                  reject(
+                    new Error(
+                      'Proof image is too large after compression.'
+                    )
+                  );
+
+                  return;
+
+                }
+
+                resolve({
+                  base64: dataUrl,
+                  name:
+                    (
+                      file.name ||
+                      'leave-proof'
+                    ).replace(
+                      /\.[^.]+$/,
+                      ''
+                    ) +
+                    '.jpg',
+                  mimeType:
+                    'image/jpeg'
+                });
+
+              };
+
+            img.src =
+              reader.result;
+
+          };
+
+        reader.readAsDataURL(
+          file
+        );
+
+      }
+    );
+
+  }
+
+  async function reviewLeave() {
+
+    const start =
+      document.getElementById(
+        'leaveStart'
+      ).value;
+
+    const end =
+      document.getElementById(
+        'leaveEnd'
+      ).value;
+
+    const type =
+      document.getElementById(
+        'leaveType'
+      ).value;
+
+    if (
+      !start ||
+      !end ||
+      !type
+    ) {
+
+      setFormMessage(
+        'leaveMessage',
+        'Please complete start date, end date and leave type.',
+        'error'
+      );
+
+      return;
+
+    }
+
+    if (end < start) {
+
+      setFormMessage(
+        'leaveMessage',
+        'End date cannot be before start date.',
+        'error'
+      );
+
+      return;
+
+    }
+
+    const button =
+      document.getElementById(
+        'leaveReviewButton'
+      );
+
+    button.disabled = true;
+
+    setFormMessage(
+      'leaveMessage',
+      'Checking leave rules and calculating penalty...',
+      'info'
+    );
+
+    try {
+
+      pendingLeaveProof =
+        await readProofFile(
+          document.getElementById(
+            'leaveProof'
+          ).files[0]
+        );
+
+      const result =
+        await selfServiceJsonp(
+          'previewLeave',
+          {
+            startDate: start,
+            endDate: end,
+            leaveType: type
+          }
+        );
+
+      if (
+        !result ||
+        !result.success
+      ) {
+
+        throw new Error(
+          result && result.message
+            ? result.message
+            : 'Unable to calculate leave application.'
+        );
+
+      }
+
+      pendingLeave =
+        result.preview || result;
+
+      showLeaveConfirmation(
+        pendingLeave
+      );
+
+    } catch (error) {
+
+      setFormMessage(
+        'leaveMessage',
+        error && error.message
+          ? error.message
+          : String(error),
+        'error'
+      );
+
+    } finally {
+
+      button.disabled = false;
+
+    }
+
+  }
+
+  function showLeaveConfirmation(
+    p
+  ) {
+
+    const warning =
+      Number(p.totalPenalty || 0) > 0;
+
+    const status =
+      String(
+        p.status || ''
+      );
+
+    document.getElementById(
+      'leaveFormView'
+    ).classList.add('hidden');
+
+    const view =
+      document.getElementById(
+        'leaveConfirmView'
+      );
+
+    view.classList.remove('hidden');
+
+    view.innerHTML =
+      '<div class="modal-header">' +
+        '<h2 class="modal-title">Confirm Leave Application</h2>' +
+        '<button class="modal-close" type="button" onclick="closeModal(\'leaveModal\')">×</button>' +
+      '</div>' +
+
+      '<div class="confirmation-box">' +
+        '<b>Leave type:</b> ' +
+          escapeHtml(p.leaveType) +
+        '<br><b>Dates:</b> ' +
+          escapeHtml(p.startDate) +
+          ' to ' +
+          escapeHtml(p.endDate) +
+        '<br><b>Leave days:</b> ' +
+          Number(p.leaveDays || 0) +
+        '<br><b>Cutoff:</b> ' +
+          escapeHtml(p.cutoffTime || '—') +
+        '<br><b>Monthly accepted applications before this:</b> ' +
+          Number(p.monthlyLeaveCountBefore || 0) +
+          ' / ' +
+          Number(p.monthlyLimit || 0) +
+        '<br><b>Status:</b> ' +
+          escapeHtml(status || '—') +
+      '</div>' +
+
+      (
+        warning
+          ? '<div class="warning-box">' +
+              '⚠️ <b>Penalty applies.</b><br>' +
+              'Cutoff penalty: ' +
+              money(p.cutoffPenalty) +
+              '<br>' +
+              'Excess leave penalty: ' +
+              money(p.excessLeavePenalty) +
+              '<br><b>Total penalty: ' +
+              money(p.totalPenalty) +
+              '</b>' +
+              (
+                p.rejectionReason
+                  ? '<br><br><b>Reason:</b> ' +
+                    escapeHtml(p.rejectionReason)
+                  : ''
+              ) +
+            '</div>'
+          : '<div style="margin-top:12px;font-size:13px;">' +
+              'No penalty is currently applicable.' +
+            '</div>'
+      ) +
+
+      '<div class="modal-actions">' +
+        '<button class="secondary" type="button" onclick="cancelLeaveReview()">Cancel</button>' +
+        '<button class="primary" type="button" onclick="submitLeaveConfirmed()">Confirm & Submit</button>' +
+      '</div>';
+
+  }
+
+  function cancelLeaveReview() {
+
+    pendingLeave = null;
+    pendingLeaveProof = null;
+
+    document.getElementById(
+      'leaveConfirmView'
+    ).classList.add('hidden');
+
+    document.getElementById(
+      'leaveFormView'
+    ).classList.remove('hidden');
+
+  }
+
+  function submitLeaveConfirmed() {
+
+    if (!pendingLeave) return;
+
+    const p =
+      pendingLeave;
+
+    const proof =
+      pendingLeaveProof;
+
+    const payload = {
+
+      confirmed: 'true',
+
+      leaveType:
+        p.leaveType,
+
+      startDate:
+        p.startDate,
+
+      endDate:
+        p.endDate,
+
+      proofBase64:
+        proof
+          ? proof.base64
+          : '',
+
+      proofName:
+        proof
+          ? proof.name
+          : '',
+
+      proofMimeType:
+        proof
+          ? proof.mimeType
+          : ''
+
+    };
+
+    const buttons =
+      document.querySelectorAll(
+        '#leaveConfirmView button'
+      );
+
+    buttons.forEach(
+      function(button) {
+        button.disabled = true;
+      }
+    );
+
+    postSelfService(
+      'submitLeave',
+      payload
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success
+        ) {
+
+          throw new Error(
+            result && result.message
+              ? result.message
+              : 'Leave application submission failed.'
+          );
+
+        }
+
+        closeModal(
+          'leaveModal'
+        );
+
+        pendingLeave = null;
+        pendingLeaveProof = null;
+
+        loadSelfServiceConfig();
+
+        alert(
+          result.message ||
+          'Leave application submitted.'
+        );
+
+      })
+      .catch(function(error) {
+
+        alert(
+          error && error.message
+            ? error.message
+            : String(error)
+        );
+
+      });
+
+  }
+
+  function openResignationModal() {
+
+    if (!googleIdToken) return;
+
+    closeAllModals();
+
+    const today =
+      localTodayKey();
+
+    document.getElementById(
+      'resignationDate'
+    ).min = today;
+
+    document.getElementById(
+      'resignationDate'
+    ).value = '';
+
+    document.getElementById(
+      'reasonCategory'
+    ).value = '';
+
+    document.getElementById(
+      'detailedReason'
+    ).value = '';
+
+    pendingResignation = null;
+
+    document.getElementById(
+      'resignationFormView'
+    ).classList.remove('hidden');
+
+    document.getElementById(
+      'resignationConfirmView'
+    ).classList.add('hidden');
+
+    setFormMessage(
+      'resignationMessage',
+      '',
+      ''
+    );
+
+    document
+      .getElementById(
+        'resignationModal'
+      )
+      .classList.add('show');
+
+  }
+
+  function reviewResignation() {
+
+    const date =
+      document.getElementById(
+        'resignationDate'
+      ).value;
+
+    const reason =
+      document.getElementById(
+        'reasonCategory'
+      ).value;
+
+    const detail =
+      document.getElementById(
+        'detailedReason'
+      ).value.trim();
+
+    if (
+      !date ||
+      !reason ||
+      !detail
+    ) {
+
+      setFormMessage(
+        'resignationMessage',
+        'Please complete all required fields.',
+        'error'
+      );
+
+      return;
+
+    }
+
+    setFormMessage(
+      'resignationMessage',
+      'Checking notice period and penalty...',
+      'info'
+    );
+
+    selfServiceJsonp(
+      'previewResignation',
+      {
+        resignationDate: date,
+        reasonCategory: reason
+      }
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success
+        ) {
+
+          throw new Error(
+            result && result.message
+              ? result.message
+              : 'Unable to calculate resignation penalty.'
+          );
+
+        }
+
+        pendingResignation =
+          result.preview || result;
+
+        showResignationConfirmation(
+          pendingResignation,
+          detail
+        );
+
+      })
+      .catch(function(error) {
+
+        setFormMessage(
+          'resignationMessage',
+          error && error.message
+            ? error.message
+            : String(error),
+          'error'
+        );
+
+      });
+
+  }
+
+  function showResignationConfirmation(
+    p,
+    detail
+  ) {
+
+    const view =
+      document.getElementById(
+        'resignationConfirmView'
+      );
+
+    document.getElementById(
+      'resignationFormView'
+    ).classList.add('hidden');
+
+    view.classList.remove('hidden');
+
+    const penalty =
+      Number(p.penalty || 0);
+
+    view.innerHTML =
+      '<div class="modal-header">' +
+        '<h2 class="modal-title">Confirm Resignation</h2>' +
+        '<button class="modal-close" type="button" onclick="closeModal(\'resignationModal\')">×</button>' +
+      '</div>' +
+
+      '<div class="confirmation-box">' +
+        '<b>Resignation date:</b> ' +
+          escapeHtml(p.resignationDate) +
+        '<br><b>Application date:</b> ' +
+          escapeHtml(p.applicationDate) +
+        '<br><b>Notice given:</b> ' +
+          Number(p.noticeDays || 0) +
+          ' day(s)' +
+        '<br><b>Required notice:</b> ' +
+          Number(p.requiredNoticeDays || 0) +
+          ' day(s)' +
+        '<br><b>Reason:</b> ' +
+          escapeHtml(
+            document.getElementById(
+              'reasonCategory'
+            ).value
+          ) +
+      '</div>' +
+
+      (
+        penalty > 0
+          ? '<div class="warning-box">' +
+              '⚠️ <b>Penalty applies.</b><br>' +
+              'Applicable penalty: <b>' +
+              money(penalty) +
+              '</b><br><br>' +
+              'Please confirm that you understand this penalty.' +
+            '</div>'
+          : '<div style="margin-top:12px;font-size:13px;">' +
+              'No resignation penalty is currently applicable.' +
+            '</div>'
+      ) +
+
+      '<div class="modal-actions">' +
+        '<button class="secondary" type="button" onclick="cancelResignationReview()">Cancel</button>' +
+        '<button class="primary" type="button" onclick="submitResignationConfirmed()">Confirm & Submit</button>' +
+      '</div>';
+
+    view.dataset.detailReason =
+      detail;
+
+  }
+
+  function cancelResignationReview() {
+
+    pendingResignation = null;
+
+    document.getElementById(
+      'resignationConfirmView'
+    ).classList.add('hidden');
+
+    document.getElementById(
+      'resignationFormView'
+    ).classList.remove('hidden');
+
+  }
+
+  function submitResignationConfirmed() {
+
+    if (!pendingResignation) return;
+
+    const p =
+      pendingResignation;
+
+    const detail =
+      document.getElementById(
+        'resignationConfirmView'
+      ).dataset.detailReason || '';
+
+    const reason =
+      document.getElementById(
+        'reasonCategory'
+      ).value;
+
+    postSelfService(
+      'submitResignation',
+      {
+        confirmed: 'true',
+        resignationDate:
+          p.resignationDate,
+        reasonCategory:
+          reason,
+        detailedReason:
+          detail
+      }
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success
+        ) {
+
+          throw new Error(
+            result && result.message
+              ? result.message
+              : 'Resignation submission failed.'
+          );
+
+        }
+
+        closeModal(
+          'resignationModal'
+        );
+
+        pendingResignation = null;
+
+        loadSelfServiceConfig();
+
+        alert(
+          result.message ||
+          'Resignation application submitted.'
+        );
+
+      })
+      .catch(function(error) {
+
+        alert(
+          error && error.message
+            ? error.message
+            : String(error)
+        );
+
+      });
+
+  }
+
+  function postSelfService(
+    action,
+    data
+  ) {
+
+    return new Promise(
+      function(resolve, reject) {
+
+        const iframe =
+          document.getElementById(
+            'selfServicePostFrame'
+          );
+
+        if (!iframe) {
+
+          reject(
+            new Error(
+              'Self-service submission frame is missing.'
+            )
+          );
+
+          return;
+
+        }
+
+        let settled = false;
+
+        const timeout =
+          setTimeout(
+            function() {
+
+              if (settled) return;
+
+              settled = true;
+
+              window.removeEventListener(
+                'message',
+                handler
+              );
+
+              reject(
+                new Error(
+                  'The self-service backend did not respond in time.'
+                )
+              );
+
+            },
+            30000
+          );
+
+        function handler(event) {
+
+          if (
+            event.source !==
+            iframe.contentWindow
+          ) {
+            return;
+          }
+
+          if (settled) return;
+
+          settled = true;
+
+          clearTimeout(
+            timeout
+          );
+
+          window.removeEventListener(
+            'message',
+            handler
+          );
+
+          resolve(
+            event.data &&
+            event.data.type ===
+              'PG_SELF_SERVICE_RESULT'
+              ? event.data.result
+              : event.data
+          );
+
+        }
+
+        window.addEventListener(
+          'message',
+          handler
+        );
+
+        const form =
+          document.createElement(
+            'form'
+          );
+
+        form.method = 'POST';
+        form.action =
+          APPS_SCRIPT_URL;
+        form.target =
+          'selfServicePostFrame';
+        form.enctype =
+          'application/x-www-form-urlencoded';
+        form.style.display =
+          'none';
+
+        const payload =
+          Object.assign(
+            {
+              action: action,
+              googleIdToken:
+                googleIdToken
+            },
+            data || {}
+          );
+
+        Object.keys(
+          payload
+        ).forEach(
+          function(key) {
+
+            const input =
+              document.createElement(
+                'input'
+              );
+
+            input.type = 'hidden';
+            input.name = key;
+            input.value =
+              payload[key] == null
+                ? ''
+                : String(payload[key]);
+
+            form.appendChild(
+              input
+            );
+
+          }
+        );
+
+        document.body.appendChild(
+          form
+        );
+
+        form.submit();
+
+        form.remove();
+
+      }
+    );
+
+  }
+
+  function openInfoModal() {
+
+    if (!selfServiceConfig) return;
+
+    closeAllModals();
+
+    renderRules();
+
+    document
+      .getElementById(
+        'infoModal'
+      )
+      .classList.add('show');
+
+  }
+
+  function renderRules() {
+
+    const content =
+      document.getElementById(
+        'rulesContent'
+      );
+
+    const rules =
+      selfServiceConfig.rules || [];
+
+    content.innerHTML = '';
+
+    if (!rules.length) {
+
+      content.innerHTML =
+        '<div class="rules-text">' +
+        'No rules are currently configured.' +
+        '</div>';
+
+    } else {
+
+      rules.forEach(
+        function(rule) {
+
+          const row =
+            document.createElement(
+              'div'
+            );
+
+          row.className =
+            'rules-row';
+
+          row.innerHTML =
+            '<div class="rules-title">' +
+              escapeHtml(
+                rule.title || ''
+              ) +
+            '</div>' +
+            '<div class="rules-text">' +
+              escapeHtml(
+                rule.text || ''
+              ) +
+            '</div>';
+
+          content.appendChild(
+            row
+          );
+
+        }
+      );
+
+    }
+
+  }
+
+  function closeModal(id) {
+
+    const modal =
+      document.getElementById(id);
+
+    if (modal) {
+      modal.classList.remove(
+        'show'
+      );
+    }
+
+  }
+
+  function closeAllModals() {
+
+    [
+      'leaveModal',
+      'resignationModal',
+      'infoModal'
+    ].forEach(
+      function(id) {
+        closeModal(id);
+      }
+    );
+
+  }
+
+  function backdropClose(
+    event,
+    id
+  ) {
+
+    if (
+      event.target ===
+      event.currentTarget
+    ) {
+
+      closeModal(id);
+
+    }
+
+  }
+
+  function setFormMessage(
+    id,
+    message,
+    type
+  ) {
+
+    const element =
+      document.getElementById(id);
+
+    if (!element) return;
+
+    element.textContent =
+      message || '';
+
+    element.style.color =
+      type === 'error'
+        ? '#c5221f'
+        : type === 'success'
+          ? '#137333'
+          : '#5f6368';
+
+  }
+
 
 
   /* =====================================================
@@ -1565,6 +3231,9 @@ const BACKEND_TIMEOUT_MS = 20000;
       script.src =
         APPS_SCRIPT_URL +
         '?jsonp=1' +
+        (payload.action
+          ? '&action=' + encodeURIComponent(payload.action)
+          : '') +
         '&callback=' + encodeURIComponent(callbackName) +
         '&data=' + encodeURIComponent(JSON.stringify(payload)) +
         '&_=' + Date.now();
