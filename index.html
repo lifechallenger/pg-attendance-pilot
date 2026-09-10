@@ -1058,6 +1058,10 @@ const BACKEND_TIMEOUT_MS = 20000;
       'hidden'
     );
 
+    // Load employee self-service only after Google authentication
+    // so the backend can validate the authenticated user's token.
+    loadSelfServiceConfig();
+
   }
 
 
