@@ -633,6 +633,11 @@
 
       <div id="userEmail"></div>
 
+      <div id="weekoffInfo"
+           class="hidden"
+           style="margin-top:6px;color:#5f6368;font-size:13px;">
+      </div>
+
     </div>
 
     <div id="authStatus"
@@ -1496,6 +1501,10 @@ const BACKEND_TIMEOUT_MS = 20000;
           result.userSummary
         );
 
+        renderWeekoffInfo_(
+          result.user
+        );
+
         return result;
 
       })
@@ -1614,6 +1623,76 @@ const BACKEND_TIMEOUT_MS = 20000;
       );
 
     });
+
+  }
+
+  function formatDateKeyForDisplay_(dateKey) {
+
+    if (!dateKey) return '';
+
+    const parts =
+      String(dateKey).split('-');
+
+    if (parts.length !== 3) return dateKey;
+
+    const d =
+      new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2])
+      );
+
+    const days =
+      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const months =
+      ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    return (
+      days[d.getDay()] + ', ' +
+      d.getDate() + ' ' +
+      months[d.getMonth()] + ' ' +
+      d.getFullYear()
+    );
+
+  }
+
+  function renderWeekoffInfo_(userInfo) {
+
+    const el =
+      document.getElementById(
+        'weekoffInfo'
+      );
+
+    if (!el) return;
+
+    if (
+      !userInfo ||
+      !userInfo.weekoffDayName
+    ) {
+
+      el.classList.add('hidden');
+      el.textContent = '';
+
+      return;
+
+    }
+
+    el.classList.remove('hidden');
+
+    el.textContent =
+      'Weekoff: ' +
+      userInfo.weekoffDayName +
+      (
+        userInfo.nextWeekoffDate
+          ? ' (next: ' +
+            formatDateKeyForDisplay_(
+              userInfo.nextWeekoffDate
+            ) +
+            ')'
+          : ''
+      );
 
   }
 
