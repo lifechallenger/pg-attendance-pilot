@@ -311,9 +311,21 @@
     }
 
     .summary-item {
+      display: block;
+      width: 100%;
       background: #f7f9fc;
+      border: 0;
       border-radius: 10px;
       padding: 10px;
+      margin: 0;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .summary-item:hover,
+    .summary-item:active {
+      background: #eef2f8;
     }
 
     .summary-label {
@@ -328,10 +340,21 @@
     }
 
     .summary-penalty {
+      display: block;
+      width: 100%;
       margin-top: 10px;
       padding: 10px;
       background: #fff8e1;
+      border: 0;
       border-radius: 10px;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .summary-penalty:hover,
+    .summary-penalty:active {
+      background: #fbefc8;
     }
 
     .summary-penalty-label {
@@ -343,6 +366,81 @@
       margin-top: 3px;
       font-size: 18px;
       font-weight: 800;
+    }
+
+    .detail-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .detail-toolbar .form-control {
+      flex: 1;
+    }
+
+    .detail-totals {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .detail-row {
+      border: 1px solid #edf0f2;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .detail-row-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .detail-row-sub {
+      margin-top: 6px;
+      color: #5f6368;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .detail-status {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .detail-status.ok {
+      background: #e6f4ea;
+      color: #137333;
+    }
+
+    .detail-status.warn {
+      background: #fce8e6;
+      color: #c5221f;
+    }
+
+    .detail-status.neutral {
+      background: #e8f0fe;
+      color: #174ea6;
+    }
+
+    .detail-empty {
+      color: #5f6368;
+      font-size: 13px;
+      padding: 10px 0;
     }
 
     .modal-backdrop {
@@ -721,42 +819,96 @@
 
     <div class="summary-grid">
 
-      <div class="summary-item">
+      <button class="summary-item" type="button"
+              onclick="openLeaveDetailsModal()">
         <div class="summary-label">Leave days this month</div>
         <div id="summaryLeaveDays" class="summary-value">0</div>
-      </div>
+      </button>
 
-      <div class="summary-item">
+      <button class="summary-item" type="button"
+              onclick="openLeaveDetailsModal()">
         <div class="summary-label">Leave applications</div>
         <div id="summaryLeaveApps" class="summary-value">0</div>
-      </div>
+      </button>
 
-      <div class="summary-item">
+      <button class="summary-item" type="button"
+              onclick="openLeaveDetailsModal()">
         <div class="summary-label">Accepted applications</div>
         <div id="summaryAccepted" class="summary-value">0 / 2</div>
-      </div>
+      </button>
 
-      <div class="summary-item">
+      <button class="summary-item" type="button"
+              onclick="openResignationHistoryModal()">
         <div class="summary-label">Resignation</div>
         <div id="summaryResignation"
              class="summary-value"
              style="font-size:14px;">
           None
         </div>
-      </div>
+      </button>
 
     </div>
 
-    <div class="summary-penalty">
+    <button class="summary-penalty" type="button"
+            onclick="openLeaveDetailsModal()">
       <div class="summary-penalty-label">
-        Total leave penalty
+        Total leave penalty (tap for details)
       </div>
       <div id="summaryLeavePenalty"
            class="summary-penalty-value">
         &#8377;0
       </div>
-    </div>
+    </button>
 
+  </div>
+
+
+  <!-- =====================================================
+       LEAVE DETAILS MODAL
+       ===================================================== -->
+  <div id="leaveDetailsModal"
+       class="modal-backdrop"
+       onclick="backdropClose(event,'leaveDetailsModal')">
+
+    <div class="self-modal">
+
+      <div class="modal-header">
+        <h2 class="modal-title">Leave Details</h2>
+        <button class="modal-close" type="button"
+                onclick="closeModal('leaveDetailsModal')">&times;</button>
+      </div>
+
+      <div class="detail-toolbar">
+        <input type="month" id="leaveDetailsMonth" class="form-control"
+               onchange="loadLeaveDetails_(this.value)">
+      </div>
+
+      <div id="leaveDetailsTotals" class="detail-totals"></div>
+
+      <div id="leaveDetailsList" class="detail-list"></div>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+       RESIGNATION HISTORY MODAL
+       ===================================================== -->
+  <div id="resignationHistoryModal"
+       class="modal-backdrop"
+       onclick="backdropClose(event,'resignationHistoryModal')">
+
+    <div class="self-modal">
+
+      <div class="modal-header">
+        <h2 class="modal-title">Resignation History</h2>
+        <button class="modal-close" type="button"
+                onclick="closeModal('resignationHistoryModal')">&times;</button>
+      </div>
+
+      <div id="resignationHistoryList" class="detail-list"></div>
+
+    </div>
   </div>
 
 
@@ -1312,9 +1464,9 @@ const BACKEND_TIMEOUT_MS = 20000;
 
   function loadSelfServiceConfig() {
 
-    if (!googleIdToken) return;
+    if (!googleIdToken) return Promise.resolve(null);
 
-    selfServiceJsonp(
+    return selfServiceJsonp(
       'getSelfServiceConfig'
     )
       .then(function(result) {
@@ -1344,6 +1496,8 @@ const BACKEND_TIMEOUT_MS = 20000;
           result.userSummary
         );
 
+        return result;
+
       })
       .catch(function(error) {
 
@@ -1352,6 +1506,55 @@ const BACKEND_TIMEOUT_MS = 20000;
           error
         );
 
+        return null;
+
+      });
+
+  }
+
+  /*
+   * Google's Apps Script write endpoint (doPost) is submitted through a
+   * hidden iframe because fetch()/CORS isn't available here (see the
+   * JSONP comments above). The response page Google serves for that POST
+   * sets a Cross-Origin-Opener-Policy header, which silently blocks its
+   * window.parent.postMessage() call -- confirmed via a
+   * "Cross-Origin-Opener-Policy policy would block the window.postMessage
+   * call" console error. The write itself still completes server-side
+   * (LockService + appendRow run before the response is generated); we
+   * just can never read that response back. So instead of trusting a
+   * message that will never arrive, we re-fetch state through the
+   * already-reliable JSONP path and infer success from whether it
+   * changed, retrying once after a short delay in case of write
+   * propagation lag.
+   */
+  function waitForSelfServiceChange_(checkFn) {
+
+    return loadSelfServiceConfig()
+      .then(function() {
+
+        if (checkFn()) {
+          return true;
+        }
+
+        return new Promise(function(resolve) {
+
+          setTimeout(function() {
+
+            loadSelfServiceConfig()
+              .then(function() {
+                resolve(!!checkFn());
+              })
+              .catch(function() {
+                resolve(false);
+              });
+
+          }, 1500);
+
+        });
+
+      })
+      .catch(function() {
+        return false;
       });
 
   }
@@ -1858,14 +2061,32 @@ const BACKEND_TIMEOUT_MS = 20000;
           escapeHtml(p.startDate) +
           ' to ' +
           escapeHtml(p.endDate) +
-        '<br><b>Leave days:</b> ' +
+        '<br><b>Leave days requested:</b> ' +
           Number(p.leaveDays || 0) +
+        '<br><b>Countable days (weekoff/attendance-adjusted):</b> ' +
+          Number(p.countableLeaveDaysBeforeCompOff || 0) +
+        (
+          Number(p.compOffDaysToApply || 0) > 0
+            ? '<br><b>Comp-off days to be applied:</b> ' +
+              Number(p.compOffDaysToApply || 0) +
+              ' (of ' +
+              Number(p.compOffAvailable || 0) +
+              ' available)' +
+              '<br><b>Days that will actually count:</b> ' +
+              Number(p.countableLeaveDays || 0)
+            : ''
+        ) +
         '<br><b>Cutoff:</b> ' +
           escapeHtml(p.cutoffTime || '—') +
-        '<br><b>Monthly accepted applications before this:</b> ' +
+        '<br><b>Chargeable applications this month before this one:</b> ' +
           Number(p.monthlyLeaveCountBefore || 0) +
           ' / ' +
           Number(p.monthlyLimit || 0) +
+        (
+          p.shiftCapacityExceeded
+            ? '<br><b>Shift capacity:</b> full for one or more of these dates'
+            : ''
+        ) +
         '<br><b>Status:</b> ' +
           escapeHtml(status || '—') +
       '</div>' +
@@ -1879,6 +2100,12 @@ const BACKEND_TIMEOUT_MS = 20000;
               '<br>' +
               'Excess leave penalty: ' +
               money(p.excessLeavePenalty) +
+              (
+                Number(p.shiftCapacityPenalty || 0) > 0
+                  ? '<br>Shift capacity penalty: ' +
+                    money(p.shiftCapacityPenalty)
+                  : ''
+              ) +
               '<br><b>Total penalty: ' +
               money(p.totalPenalty) +
               '</b>' +
@@ -1967,24 +2194,36 @@ const BACKEND_TIMEOUT_MS = 20000;
       }
     );
 
+    const beforeCount =
+      selfServiceConfig &&
+      selfServiceConfig.userSummary
+        ? Number(
+            selfServiceConfig.userSummary
+              .leaveApplicationsThisMonth || 0
+          )
+        : 0;
+
     postSelfService(
       'submitLeave',
       payload
     )
-      .then(function(result) {
+      .then(function() {
 
-        if (
-          !result ||
-          !result.success
-        ) {
+        return waitForSelfServiceChange_(
+          function() {
+            return (
+              selfServiceConfig &&
+              selfServiceConfig.userSummary &&
+              Number(
+                selfServiceConfig.userSummary
+                  .leaveApplicationsThisMonth || 0
+              ) > beforeCount
+            );
+          }
+        );
 
-          throw new Error(
-            result && result.message
-              ? result.message
-              : 'Leave application submission failed.'
-          );
-
-        }
+      })
+      .then(function(confirmed) {
 
         closeModal(
           'leaveModal'
@@ -1993,15 +2232,41 @@ const BACKEND_TIMEOUT_MS = 20000;
         pendingLeave = null;
         pendingLeaveProof = null;
 
-        loadSelfServiceConfig();
+        if (confirmed) {
 
-        alert(
-          result.message ||
-          'Leave application submitted.'
+          alert(
+            p.totalPenalty > 0
+              ? 'Leave application submitted. Applicable penalty: ' +
+                money(p.totalPenalty) +
+                '.'
+              : 'Leave application submitted successfully.'
+          );
+
+        } else {
+
+          alert(
+            'We could not confirm the leave application went through. ' +
+            'Please check "My Summary" below -- this usually means the ' +
+            'dates overlap an existing application, or the cutoff was ' +
+            'exceeded.'
+          );
+
+        }
+
+        buttons.forEach(
+          function(button) {
+            button.disabled = false;
+          }
         );
 
       })
       .catch(function(error) {
+
+        buttons.forEach(
+          function(button) {
+            button.disabled = false;
+          }
+        );
 
         alert(
           error && error.message
@@ -2245,6 +2510,26 @@ const BACKEND_TIMEOUT_MS = 20000;
         'reasonCategory'
       ).value;
 
+    const buttons =
+      document.querySelectorAll(
+        '#resignationConfirmView button'
+      );
+
+    buttons.forEach(
+      function(button) {
+        button.disabled = true;
+      }
+    );
+
+    const beforeStatus =
+      selfServiceConfig &&
+      selfServiceConfig.userSummary
+        ? String(
+            selfServiceConfig.userSummary
+              .resignationStatus || 'None'
+          )
+        : 'None';
+
     postSelfService(
       'submitResignation',
       {
@@ -2257,20 +2542,28 @@ const BACKEND_TIMEOUT_MS = 20000;
           detail
       }
     )
-      .then(function(result) {
+      .then(function() {
 
-        if (
-          !result ||
-          !result.success
-        ) {
+        return waitForSelfServiceChange_(
+          function() {
+            const afterStatus =
+              selfServiceConfig &&
+              selfServiceConfig.userSummary
+                ? String(
+                    selfServiceConfig.userSummary
+                      .resignationStatus || 'None'
+                  )
+                : 'None';
 
-          throw new Error(
-            result && result.message
-              ? result.message
-              : 'Resignation submission failed.'
-          );
+            return (
+              afterStatus !== beforeStatus &&
+              afterStatus.toLowerCase() === 'pending'
+            );
+          }
+        );
 
-        }
+      })
+      .then(function(confirmed) {
 
         closeModal(
           'resignationModal'
@@ -2278,15 +2571,40 @@ const BACKEND_TIMEOUT_MS = 20000;
 
         pendingResignation = null;
 
-        loadSelfServiceConfig();
+        if (confirmed) {
 
-        alert(
-          result.message ||
-          'Resignation application submitted.'
+          alert(
+            p.penalty > 0
+              ? 'Resignation application submitted. Applicable penalty: ' +
+                money(p.penalty) +
+                '.'
+              : 'Resignation application submitted successfully.'
+          );
+
+        } else {
+
+          alert(
+            'We could not confirm the resignation application went ' +
+            'through. Please check "My Summary" below -- this usually ' +
+            'means you already have an active resignation application.'
+          );
+
+        }
+
+        buttons.forEach(
+          function(button) {
+            button.disabled = false;
+          }
         );
 
       })
       .catch(function(error) {
+
+        buttons.forEach(
+          function(button) {
+            button.disabled = false;
+          }
+        );
 
         alert(
           error && error.message
@@ -2333,9 +2651,9 @@ const BACKEND_TIMEOUT_MS = 20000;
 
               settled = true;
 
-              window.removeEventListener(
-                'message',
-                handler
+              iframe.removeEventListener(
+                'load',
+                handleLoad
               );
 
               reject(
@@ -2348,14 +2666,19 @@ const BACKEND_TIMEOUT_MS = 20000;
             30000
           );
 
-        function handler(event) {
-
-          if (
-            event.source !==
-            iframe.contentWindow
-          ) {
-            return;
-          }
+        /*
+         * We deliberately do NOT read anything from the iframe's
+         * response here (Google's response page blocks its own
+         * window.parent.postMessage() call via a Cross-Origin-Opener-
+         * Policy header, so nothing ever arrives that way). The
+         * 'load' event on the iframe ELEMENT is a normal same-origin
+         * DOM event dispatched by the browser once the iframe finishes
+         * navigating, and is unaffected by COOP -- it just tells us
+         * the POST round trip to Apps Script is done. The caller is
+         * responsible for confirming what actually happened by
+         * re-checking state through the JSONP path.
+         */
+        function handleLoad() {
 
           if (settled) return;
 
@@ -2365,24 +2688,18 @@ const BACKEND_TIMEOUT_MS = 20000;
             timeout
           );
 
-          window.removeEventListener(
-            'message',
-            handler
+          iframe.removeEventListener(
+            'load',
+            handleLoad
           );
 
-          resolve(
-            event.data &&
-            event.data.type ===
-              'PG_SELF_SERVICE_RESULT'
-              ? event.data.result
-              : event.data
-          );
+          resolve({ success: true });
 
         }
 
-        window.addEventListener(
-          'message',
-          handler
+        iframe.addEventListener(
+          'load',
+          handleLoad
         );
 
         const form =
@@ -2536,12 +2853,385 @@ const BACKEND_TIMEOUT_MS = 20000;
     [
       'leaveModal',
       'resignationModal',
-      'infoModal'
+      'infoModal',
+      'leaveDetailsModal',
+      'resignationHistoryModal'
     ].forEach(
       function(id) {
         closeModal(id);
       }
     );
+
+  }
+
+
+  /* =====================================================
+     LEAVE DETAILS DRILL-DOWN
+     ===================================================== */
+
+  function openLeaveDetailsModal() {
+
+    if (!googleIdToken) return;
+
+    closeAllModals();
+
+    const monthInput =
+      document.getElementById(
+        'leaveDetailsMonth'
+      );
+
+    const currentMonth =
+      localTodayKey().slice(0, 7);
+
+    monthInput.max = currentMonth;
+
+    if (!monthInput.value) {
+      monthInput.value = currentMonth;
+    }
+
+    document
+      .getElementById(
+        'leaveDetailsModal'
+      )
+      .classList.add('show');
+
+    loadLeaveDetails_(
+      monthInput.value
+    );
+
+  }
+
+  function loadLeaveDetails_(monthKey) {
+
+    const listEl =
+      document.getElementById(
+        'leaveDetailsList'
+      );
+
+    const totalsEl =
+      document.getElementById(
+        'leaveDetailsTotals'
+      );
+
+    listEl.innerHTML =
+      '<div class="detail-empty">Loading...</div>';
+
+    totalsEl.innerHTML = '';
+
+    selfServiceJsonp(
+      'getLeaveMonthDetails',
+      { month: monthKey }
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success
+        ) {
+
+          throw new Error(
+            result && result.message
+              ? result.message
+              : 'Unable to load leave details.'
+          );
+
+        }
+
+        renderLeaveDetails_(
+          result
+        );
+
+      })
+      .catch(function(error) {
+
+        listEl.innerHTML =
+          '<div class="detail-empty">' +
+          escapeHtml(
+            error && error.message
+              ? error.message
+              : String(error)
+          ) +
+          '</div>';
+
+      });
+
+  }
+
+  function renderLeaveDetails_(data) {
+
+    const totals =
+      data.totals || {};
+
+    const totalsEl =
+      document.getElementById(
+        'leaveDetailsTotals'
+      );
+
+    totalsEl.innerHTML =
+      '<div class="summary-item">' +
+        '<div class="summary-label">Chargeable leave days</div>' +
+        '<div class="summary-value">' +
+          Number(totals.leaveDays || 0) +
+        '</div>' +
+      '</div>' +
+      '<div class="summary-item">' +
+        '<div class="summary-label">Applications</div>' +
+        '<div class="summary-value">' +
+          Number(totals.leaveApplications || 0) +
+        '</div>' +
+      '</div>' +
+      '<div class="summary-item">' +
+        '<div class="summary-label">Chargeable applications</div>' +
+        '<div class="summary-value">' +
+          Number(totals.acceptedApplications || 0) +
+        '</div>' +
+      '</div>' +
+      '<div class="summary-item">' +
+        '<div class="summary-label">Total penalty</div>' +
+        '<div class="summary-value">' +
+          money(totals.totalPenalty) +
+        '</div>' +
+      '</div>';
+
+    const listEl =
+      document.getElementById(
+        'leaveDetailsList'
+      );
+
+    const applications =
+      data.applications || [];
+
+    if (!applications.length) {
+
+      listEl.innerHTML =
+        '<div class="detail-empty">' +
+        'No leave applications found for this month.' +
+        '</div>';
+
+      return;
+
+    }
+
+    listEl.innerHTML =
+      applications.map(
+        function(a) {
+
+          const statusLower =
+            String(a.status || '').toLowerCase();
+
+          const statusClass =
+            isAcceptedLeaveStatus_client_(statusLower)
+              ? 'ok'
+              : statusLower.indexOf('rejected') === 0
+                ? 'warn'
+                : 'neutral';
+
+          return (
+            '<div class="detail-row">' +
+              '<div class="detail-row-main">' +
+                '<span>' +
+                  escapeHtml(a.startDate) +
+                  ' to ' +
+                  escapeHtml(a.endDate) +
+                '</span>' +
+                '<span class="detail-status ' +
+                  statusClass +
+                  '">' +
+                  escapeHtml(a.status || '') +
+                '</span>' +
+              '</div>' +
+              '<div class="detail-row-sub">' +
+                escapeHtml(a.leaveType) +
+                ' &middot; ' +
+                Number(a.leaveDays || 0) +
+                ' day(s) requested, ' +
+                Number(a.chargeableDays || 0) +
+                ' chargeable' +
+                (
+                  Number(a.compOffDaysApplied || 0) > 0
+                    ? ' (' +
+                      Number(a.compOffDaysApplied || 0) +
+                      ' comp-off day(s) applied)'
+                    : ''
+                ) +
+                '<br>' +
+                'Cutoff penalty: ' +
+                money(a.cutoffPenalty) +
+                ' &middot; Excess penalty: ' +
+                money(a.excessLeavePenalty) +
+                (
+                  Number(a.shiftCapacityPenalty || 0) > 0
+                    ? ' &middot; Shift capacity penalty: ' +
+                      money(a.shiftCapacityPenalty)
+                    : ''
+                ) +
+                ' &middot; <b>Total: ' +
+                money(a.totalPenalty) +
+                '</b>' +
+                (
+                  a.applicationTimestamp
+                    ? '<br>Applied: ' +
+                      escapeHtml(a.applicationTimestamp)
+                    : ''
+                ) +
+              '</div>' +
+            '</div>'
+          );
+
+        }
+      ).join('');
+
+  }
+
+  function isAcceptedLeaveStatus_client_(statusLower) {
+
+    return (
+      statusLower === 'approved' ||
+      statusLower === 'accepted'
+    );
+
+  }
+
+
+  /* =====================================================
+     RESIGNATION HISTORY DRILL-DOWN
+     ===================================================== */
+
+  function openResignationHistoryModal() {
+
+    if (!googleIdToken) return;
+
+    closeAllModals();
+
+    document
+      .getElementById(
+        'resignationHistoryModal'
+      )
+      .classList.add('show');
+
+    loadResignationHistory_();
+
+  }
+
+  function loadResignationHistory_() {
+
+    const listEl =
+      document.getElementById(
+        'resignationHistoryList'
+      );
+
+    listEl.innerHTML =
+      '<div class="detail-empty">Loading...</div>';
+
+    selfServiceJsonp(
+      'getResignationHistory'
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success
+        ) {
+
+          throw new Error(
+            result && result.message
+              ? result.message
+              : 'Unable to load resignation history.'
+          );
+
+        }
+
+        renderResignationHistory_(
+          result.applications || []
+        );
+
+      })
+      .catch(function(error) {
+
+        listEl.innerHTML =
+          '<div class="detail-empty">' +
+          escapeHtml(
+            error && error.message
+              ? error.message
+              : String(error)
+          ) +
+          '</div>';
+
+      });
+
+  }
+
+  function renderResignationHistory_(applications) {
+
+    const listEl =
+      document.getElementById(
+        'resignationHistoryList'
+      );
+
+    if (!applications.length) {
+
+      listEl.innerHTML =
+        '<div class="detail-empty">' +
+        'No resignation applications on record.' +
+        '</div>';
+
+      return;
+
+    }
+
+    listEl.innerHTML =
+      applications.map(
+        function(a) {
+
+          const statusLower =
+            String(a.status || '').toLowerCase();
+
+          const statusClass =
+            statusLower === 'approved' ||
+            statusLower === 'accepted'
+              ? 'ok'
+              : statusLower.indexOf('rejected') === 0 ||
+                statusLower === 'cancelled'
+                ? 'warn'
+                : 'neutral';
+
+          return (
+            '<div class="detail-row">' +
+              '<div class="detail-row-main">' +
+                '<span>Resignation: ' +
+                  escapeHtml(a.resignationDate) +
+                '</span>' +
+                '<span class="detail-status ' +
+                  statusClass +
+                  '">' +
+                  escapeHtml(a.status || '') +
+                '</span>' +
+              '</div>' +
+              '<div class="detail-row-sub">' +
+                escapeHtml(a.reasonCategory) +
+                '<br>' +
+                'Notice given: ' +
+                Number(a.noticeDays || 0) +
+                ' day(s) (required ' +
+                Number(a.requiredNoticeDays || 0) +
+                ') &middot; ' +
+                escapeHtml(a.noticeStatus || '') +
+                '<br>' +
+                'Penalty: <b>' +
+                money(a.penalty) +
+                '</b>' +
+                (
+                  a.applicationTimestamp
+                    ? '<br>Applied: ' +
+                      escapeHtml(a.applicationTimestamp)
+                    : ''
+                ) +
+              '</div>' +
+            '</div>'
+          );
+
+        }
+      ).join('');
 
   }
 
