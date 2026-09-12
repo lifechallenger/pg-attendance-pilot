@@ -20,9 +20,24 @@
           async
           defer></script>
 
-  <!-- QR scanner -->
-  <script src="https://unpkg.com/html5-qrcode"
-          type="text/javascript"></script>
+  <!--
+    QR scanner.
+
+    PERFORMANCE: this was a blocking <script> in <head>, so the browser
+    stopped parsing the document -- and therefore painting anything at
+    all -- until unpkg had resolved the unpinned package, followed the
+    redirect and delivered the bundle. On a slow mobile connection that
+    alone accounted for a second or more of blank screen before the
+    sign-in card, let alone the employee buttons.
+
+    It is only needed after the user taps "Start Camera", so it is now
+    deferred (parsed after the document, before DOMContentLoaded) and
+    pinned to an exact version so unpkg can serve it from cache with no
+    redirect hop.
+  -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
+          type="text/javascript"
+          defer></script>
 
   <style>
 
@@ -286,6 +301,20 @@
 
     .summary-card {
       display: none;
+    }
+
+    /*
+     * Placeholder styling for summary values that have not arrived yet.
+     * The card is revealed immediately on sign-in with these in place,
+     * so the layout never shifts when the real numbers land.
+     */
+    .summary-value.is-loading,
+    .summary-penalty-value.is-loading {
+      color: #c6cbd1;
+    }
+
+    .employee-tools.is-loading .employee-tool-btn {
+      opacity: 0.65;
     }
 
     .summary-header {
@@ -1347,9 +1376,102 @@ const BACKEND_TIMEOUT_MS = 20000;
       'hidden'
     );
 
-    // Load employee self-service only after Google authentication
-    // so the backend can validate the authenticated user's token.
-    loadSelfServiceConfig();
+    /*
+     * PERFORMANCE: the employee tools and the summary card used to stay
+     * hidden until the single heavy getSelfServiceConfig round trip had
+     * finished -- which meant the user sat on the home screen with no
+     * Apply Leave / Resignation / Summary in sight for as long as the
+     * server took to read a dozen sheets.
+     *
+     * Now the UI is revealed synchronously, right here, with skeleton
+     * placeholders, and the two data calls run in PARALLEL afterwards:
+     *
+     *   getSelfServiceBootstrap -> dropdowns, weekoff, rules
+     *                              (small cached config sheets only)
+     *   getEmployeeSummary      -> the summary numbers
+     *                              (the genuinely expensive part)
+     *
+     * Each one renders the moment it lands, so the cheap half is never
+     * held hostage by the expensive half.
+     */
+    revealEmployeeUi_();
+
+    loadSelfServiceBootstrap();
+    loadEmployeeSummaryOnly();
+
+  }
+
+
+  /*
+   * Reveals the employee tools and the summary card instantly, before
+   * any network call, with placeholder values in place. The placeholders
+   * occupy the same box as the real values so nothing reflows when the
+   * numbers arrive.
+   */
+  function revealEmployeeUi_() {
+
+    const tools =
+      document.getElementById(
+        'employeeTools'
+      );
+
+    if (tools) {
+      tools.style.display = 'block';
+      tools.classList.add('is-loading');
+    }
+
+    const card =
+      document.getElementById(
+        'summaryCard'
+      );
+
+    if (card) {
+      card.style.display = 'block';
+    }
+
+    [
+      'summaryLeaveDays',
+      'summaryLeaveApps',
+      'summaryAccepted',
+      'summaryResignation',
+      'summaryLeavePenalty'
+    ].forEach(function(id) {
+
+      const el =
+        document.getElementById(id);
+
+      if (!el) return;
+
+      el.textContent = '\u2026';
+      el.classList.add('is-loading');
+
+    });
+
+    /*
+     * The two modals can now be opened before their option lists have
+     * arrived, so seed them with a disabled placeholder rather than an
+     * empty select. populateSelfServiceLists() replaces this wholesale
+     * as soon as the bootstrap payload lands.
+     */
+    const leaveType =
+      document.getElementById(
+        'leaveType'
+      );
+
+    if (leaveType && !selfServiceBootstrapReady) {
+      leaveType.innerHTML =
+        '<option value="">Loading leave types&hellip;</option>';
+    }
+
+    const reason =
+      document.getElementById(
+        'reasonCategory'
+      );
+
+    if (reason && !selfServiceBootstrapReady) {
+      reason.innerHTML =
+        '<option value="">Loading reasons&hellip;</option>';
+    }
 
   }
 
@@ -1412,6 +1534,13 @@ const BACKEND_TIMEOUT_MS = 20000;
      ===================================================== */
 
   let selfServiceConfig = null;
+
+  /*
+   * True once the bootstrap payload has landed, i.e. the dropdowns are
+   * really populated. The modals can be opened before that, so they
+   * check this to decide whether to show a "Loading..." placeholder.
+   */
+  let selfServiceBootstrapReady = false;
   let pendingLeave = null;
   let pendingResignation = null;
   let pendingLeaveProof = null;
@@ -1467,12 +1596,39 @@ const BACKEND_TIMEOUT_MS = 20000;
 
   }
 
-  function loadSelfServiceConfig() {
+  /*
+   * selfServiceConfig is read by openInfoModal / renderRules /
+   * openLeaveModal and friends, and it used to be the single object
+   * returned by getSelfServiceConfig. Now that the payload arrives in
+   * two independent pieces, each piece is merged into it as it lands so
+   * every existing consumer keeps seeing the same shape.
+   */
+  function mergeSelfServiceConfig_(patch) {
+
+    if (!patch) return;
+
+    selfServiceConfig =
+      Object.assign(
+        { success: true },
+        selfServiceConfig || {},
+        patch
+      );
+
+  }
+
+
+  /*
+   * FAST PATH. Touches only the small, long-cached config sheets
+   * (Leave_Types, Resignation_Reasons, Leave_Global_Config, Shifts), so
+   * it returns well before the summary does. Populates the dropdowns,
+   * the weekoff line and the rules text.
+   */
+  function loadSelfServiceBootstrap() {
 
     if (!googleIdToken) return Promise.resolve(null);
 
     return selfServiceJsonp(
-      'getSelfServiceConfig'
+      'getSelfServiceBootstrap'
     )
       .then(function(result) {
 
@@ -1487,13 +1643,133 @@ const BACKEND_TIMEOUT_MS = 20000;
           );
         }
 
-        selfServiceConfig = result;
+        mergeSelfServiceConfig_(result);
 
-        document
-          .getElementById(
+        selfServiceBootstrapReady = true;
+
+        const tools =
+          document.getElementById(
             'employeeTools'
-          )
-          .style.display = 'block';
+          );
+
+        if (tools) {
+          tools.style.display = 'block';
+          tools.classList.remove('is-loading');
+        }
+
+        populateSelfServiceLists();
+
+        renderWeekoffInfo_(
+          result.user
+        );
+
+        return result;
+
+      })
+      .catch(function(error) {
+
+        console.warn(
+          'Employee bootstrap load failed:',
+          error
+        );
+
+        /*
+         * Fallback for the case where the browser is running a cached
+         * copy of this page against an older Apps Script deployment
+         * that does not know the new actions yet.
+         */
+        return loadSelfServiceConfigLegacy_();
+
+      });
+
+  }
+
+
+  /*
+   * SLOW PATH, isolated. This is the call that has to scan
+   * Leave_Applications, Resignation_Applications and the presence log,
+   * so it is deliberately the only thing waiting on that work.
+   */
+  function loadEmployeeSummaryOnly() {
+
+    if (!googleIdToken) return Promise.resolve(null);
+
+    return selfServiceJsonp(
+      'getEmployeeSummary'
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success ||
+          !result.userSummary
+        ) {
+          throw new Error(
+            result && result.message
+              ? result.message
+              : 'Unable to load your summary.'
+          );
+        }
+
+        mergeSelfServiceConfig_({
+          userSummary: result.userSummary
+        });
+
+        renderEmployeeSummary(
+          result.userSummary
+        );
+
+        return result;
+
+      })
+      .catch(function(error) {
+
+        console.warn(
+          'Employee summary load failed:',
+          error
+        );
+
+        return null;
+
+      });
+
+  }
+
+
+  /*
+   * Kept only as the compatibility fallback described above -- the
+   * original single heavy endpoint. Nothing calls it on the happy path
+   * any more.
+   */
+  function loadSelfServiceConfigLegacy_() {
+
+    if (!googleIdToken) return Promise.resolve(null);
+
+    return selfServiceJsonp(
+      'getSelfServiceConfig'
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success
+        ) {
+          return null;
+        }
+
+        mergeSelfServiceConfig_(result);
+
+        selfServiceBootstrapReady = true;
+
+        const tools =
+          document.getElementById(
+            'employeeTools'
+          );
+
+        if (tools) {
+          tools.style.display = 'block';
+          tools.classList.remove('is-loading');
+        }
 
         populateSelfServiceLists();
 
@@ -1508,16 +1784,27 @@ const BACKEND_TIMEOUT_MS = 20000;
         return result;
 
       })
-      .catch(function(error) {
-
-        console.warn(
-          'Employee self-service load failed:',
-          error
-        );
-
+      .catch(function() {
         return null;
-
       });
+
+  }
+
+
+  /*
+   * Loads both halves at once. Used where a caller genuinely needs the
+   * complete picture refreshed.
+   */
+  function loadSelfServiceConfig() {
+
+    if (!googleIdToken) return Promise.resolve(null);
+
+    return Promise.all([
+      loadSelfServiceBootstrap(),
+      loadEmployeeSummaryOnly()
+    ]).then(function() {
+      return selfServiceConfig;
+    });
 
   }
 
@@ -1538,7 +1825,17 @@ const BACKEND_TIMEOUT_MS = 20000;
    */
   function waitForSelfServiceChange_(checkFn) {
 
-    return loadSelfServiceConfig()
+    /*
+     * PERFORMANCE: this previously re-fetched the ENTIRE self-service
+     * config -- dropdowns, rules, shift config, everything -- up to
+     * twice, with an unconditional 1500 ms sleep in between, purely to
+     * observe a change in the summary numbers. Only the summary can
+     * change as a result of a write, so only the summary is fetched
+     * now, and the retry delay is shorter because a single summary
+     * call is fast and the server-side cache for this user was
+     * explicitly invalidated by the write itself.
+     */
+    return loadEmployeeSummaryOnly()
       .then(function() {
 
         if (checkFn()) {
@@ -1549,7 +1846,7 @@ const BACKEND_TIMEOUT_MS = 20000;
 
           setTimeout(function() {
 
-            loadSelfServiceConfig()
+            loadEmployeeSummaryOnly()
               .then(function() {
                 resolve(!!checkFn());
               })
@@ -1557,7 +1854,7 @@ const BACKEND_TIMEOUT_MS = 20000;
                 resolve(false);
               });
 
-          }, 1500);
+          }, 900);
 
         });
 
@@ -1744,11 +2041,55 @@ const BACKEND_TIMEOUT_MS = 20000;
         summary.leavePenaltyThisMonth
       );
 
+    /* Real values are in place -- drop the placeholder styling. */
+    [
+      'summaryLeaveDays',
+      'summaryLeaveApps',
+      'summaryAccepted',
+      'summaryResignation',
+      'summaryLeavePenalty'
+    ].forEach(function(id) {
+
+      const el =
+        document.getElementById(id);
+
+      if (el) el.classList.remove('is-loading');
+
+    });
+
   }
 
   function refreshEmployeeSummary() {
 
-    loadSelfServiceConfig();
+    /*
+     * The Refresh button on the summary card only ever needs the
+     * summary -- reloading the whole config here was what made this
+     * button feel as slow as a fresh sign-in.
+     */
+    [
+      'summaryLeaveDays',
+      'summaryLeaveApps',
+      'summaryAccepted',
+      'summaryResignation',
+      'summaryLeavePenalty'
+    ].forEach(function(id) {
+
+      const el =
+        document.getElementById(id);
+
+      if (el) el.classList.add('is-loading');
+
+    });
+
+    loadEmployeeSummaryOnly();
+
+    /*
+     * If the bootstrap half never arrived (first load failed, or the
+     * user signed in while offline), take the opportunity to retry it.
+     */
+    if (!selfServiceBootstrapReady) {
+      loadSelfServiceBootstrap();
+    }
 
   }
 
@@ -2845,9 +3186,51 @@ const BACKEND_TIMEOUT_MS = 20000;
 
   function openInfoModal() {
 
-    if (!selfServiceConfig) return;
+    if (!googleIdToken) return;
 
     closeAllModals();
+
+    /*
+     * The button is now clickable before the rules have arrived, so the
+     * modal opens immediately with a loading line and re-renders itself
+     * when the bootstrap payload lands, instead of the click being
+     * silently ignored.
+     */
+    if (!selfServiceConfig) {
+
+      const content =
+        document.getElementById(
+          'rulesContent'
+        );
+
+      if (content) {
+        content.innerHTML =
+          '<div class="rules-text">Loading rules&hellip;</div>';
+      }
+
+      document
+        .getElementById(
+          'infoModal'
+        )
+        .classList.add('show');
+
+      loadSelfServiceBootstrap()
+        .then(function() {
+
+          if (
+            selfServiceConfig &&
+            document
+              .getElementById('infoModal')
+              .classList.contains('show')
+          ) {
+            renderRules();
+          }
+
+        });
+
+      return;
+
+    }
 
     renderRules();
 
@@ -2867,7 +3250,7 @@ const BACKEND_TIMEOUT_MS = 20000;
       );
 
     const rules =
-      selfServiceConfig.rules || [];
+      (selfServiceConfig && selfServiceConfig.rules) || [];
 
     content.innerHTML = '';
 
@@ -3370,6 +3753,21 @@ const BACKEND_TIMEOUT_MS = 20000;
   }
 
   if (scannerRunning) {
+    return;
+  }
+
+  /*
+   * The scanner library is now deferred rather than blocking page
+   * render, so on a very slow connection it is possible (though
+   * unlikely -- it loads during page parse) for the user to reach this
+   * button before it is available. Fail with a clear message instead of
+   * a ReferenceError.
+   */
+  if (typeof Html5Qrcode === 'undefined') {
+    setScanStatus(
+      'Camera library is still loading. Please try again in a moment.',
+      'error'
+    );
     return;
   }
 
