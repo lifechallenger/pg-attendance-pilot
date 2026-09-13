@@ -304,6 +304,31 @@
     }
 
     /*
+     * Today's attendance state, shown in the header the moment the user
+     * signs in. Green when recorded, red when not, neutral grey while
+     * the answer is still in flight.
+     */
+    .attendance-today {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .attendance-today.is-recorded {
+      color: #137333;
+    }
+
+    .attendance-today.is-not-recorded {
+      color: #c5221f;
+    }
+
+    .attendance-today.is-checking {
+      color: #80868b;
+      font-weight: 500;
+    }
+
+    /*
      * Placeholder styling for summary values that have not arrived yet.
      * The card is revealed immediately on sign-in with these in place,
      * so the layout never shifts when the real numbers land.
@@ -661,6 +686,10 @@
       <div id="userName"></div>
 
       <div id="userEmail"></div>
+
+      <div id="attendanceTodayInfo"
+           class="attendance-today hidden">
+      </div>
 
       <div id="weekoffInfo"
            class="hidden"
@@ -1410,6 +1439,27 @@ const BACKEND_TIMEOUT_MS = 20000;
    */
   function revealEmployeeUi_() {
 
+    /*
+     * Neutral placeholder for the attendance line. It is shown rather
+     * than left blank so the header does not visibly grow a line a
+     * moment later, and so it never flashes a false red "not recorded"
+     * before the real answer arrives.
+     */
+    const attendanceLine =
+      document.getElementById(
+        'attendanceTodayInfo'
+      );
+
+    if (attendanceLine) {
+
+      attendanceLine.className =
+        'attendance-today is-checking';
+
+      attendanceLine.textContent =
+        'Checking today\u2019s attendance\u2026';
+
+    }
+
     const tools =
       document.getElementById(
         'employeeTools'
@@ -1663,6 +1713,10 @@ const BACKEND_TIMEOUT_MS = 20000;
           result.user
         );
 
+        renderAttendanceToday_(
+          result.attendanceToday
+        );
+
         return result;
 
       })
@@ -1780,6 +1834,13 @@ const BACKEND_TIMEOUT_MS = 20000;
         renderWeekoffInfo_(
           result.user
         );
+
+        /*
+         * The legacy endpoint predates the attendance line, so fetch
+         * that separately rather than leaving the header stuck on
+         * "Checking...".
+         */
+        loadAttendanceStatusOnly();
 
         return result;
 
@@ -1992,6 +2053,112 @@ const BACKEND_TIMEOUT_MS = 20000;
       );
 
   }
+
+  /*
+   * The header line telling the user whether today's attendance is on
+   * record. Green sentence when it is, red when it is not.
+   *
+   * Passing null (the load failed) leaves whatever was last shown in
+   * place rather than asserting "not recorded", which would be a lie if
+   * the request simply timed out.
+   */
+  function renderAttendanceToday_(info) {
+
+    const el =
+      document.getElementById(
+        'attendanceTodayInfo'
+      );
+
+    if (!el) return;
+
+    if (!info) {
+
+      if (el.classList.contains('is-checking')) {
+
+        el.className =
+          'attendance-today is-checking';
+
+        el.textContent =
+          'Could not check today\u2019s attendance.';
+
+      }
+
+      return;
+
+    }
+
+    el.classList.remove('hidden');
+
+    if (info.recorded) {
+
+      el.className =
+        'attendance-today is-recorded';
+
+      el.textContent =
+        info.recordedAtTime
+          ? 'Attendance recorded for today at ' +
+            info.recordedAtTime +
+            '.'
+          : 'Attendance recorded for today.';
+
+      return;
+
+    }
+
+    el.className =
+      'attendance-today is-not-recorded';
+
+    el.textContent =
+      'Attendance not yet recorded for today.';
+
+  }
+
+
+  /*
+   * Refreshes only the attendance line. Used after a scan, where the
+   * dropdowns and the summary are irrelevant.
+   */
+  function loadAttendanceStatusOnly() {
+
+    if (!googleIdToken) return Promise.resolve(null);
+
+    return selfServiceJsonp(
+      'getAttendanceStatus'
+    )
+      .then(function(result) {
+
+        if (
+          !result ||
+          !result.success ||
+          !result.attendanceToday
+        ) {
+          return null;
+        }
+
+        mergeSelfServiceConfig_({
+          attendanceToday: result.attendanceToday
+        });
+
+        renderAttendanceToday_(
+          result.attendanceToday
+        );
+
+        return result.attendanceToday;
+
+      })
+      .catch(function(error) {
+
+        console.warn(
+          'Attendance status refresh failed:',
+          error
+        );
+
+        return null;
+
+      });
+
+  }
+
 
   function renderEmployeeSummary(
     summary
@@ -4591,6 +4758,15 @@ const BACKEND_TIMEOUT_MS = 20000;
           success ? 'Attendance Recorded' : 'Attendance Rejected',
           details
         );
+
+        /*
+         * Keep the header line truthful straight after a scan. Worth
+         * doing on a rejection too: "already recorded today" comes back
+         * as a rejection, and in that case the line should be green.
+         * The server dropped its cached copy of this value as part of
+         * the write, so this reads the real state.
+         */
+        loadAttendanceStatusOnly();
 
         cleanupBackendBridge();
       })
