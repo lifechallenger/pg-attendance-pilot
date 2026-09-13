@@ -638,6 +638,180 @@
       line-height: 1.55;
     }
 
+    /*
+     * Collapsible rule sections.
+     *
+     * Single level only: section header -> rules. Nesting rules inside
+     * rules was deliberately avoided, because on a phone a second level
+     * of indentation leaves almost no width for the text itself.
+     */
+    .rules-section {
+      border-bottom: 1px solid #edf0f2;
+    }
+
+    .rules-section:last-child {
+      border-bottom: 0;
+    }
+
+    .rules-section-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      margin: 0;
+      background: none;
+      border: 0;
+      box-shadow: none;
+      text-align: left;
+      cursor: pointer;
+      color: #202124;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .rules-section-header:focus-visible {
+      outline: 2px solid #1a73e8;
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    .rules-section-name {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rules-section-count {
+      color: #80868b;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .rules-chevron {
+      flex-shrink: 0;
+      width: 18px;
+      text-align: center;
+      color: #5f6368;
+      font-size: 11px;
+      line-height: 1;
+      transition: transform 0.18s ease;
+    }
+
+    .rules-section.is-open .rules-chevron {
+      transform: rotate(90deg);
+    }
+
+    .rules-section-body {
+      display: none;
+      padding: 0 0 6px 0;
+    }
+
+    .rules-section.is-open .rules-section-body {
+      display: block;
+    }
+
+    .rules-section-body .rules-row {
+      padding: 8px 0 10px 0;
+      border-bottom: 0;
+    }
+
+    /*
+     * Uninformed-leave strip on the summary card.
+     *
+     * Deliberately a separate, tappable line rather than being folded
+     * into the leave-days tile: an employee must be able to see that a
+     * charge exists and open the exact dates behind it.
+     */
+    .summary-alert {
+      width: 100%;
+      display: block;
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: #fce8e6;
+      border: 1px solid #f5c6c2;
+      border-radius: 10px;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: none;
+    }
+
+    .summary-alert-label {
+      color: #c5221f;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .summary-alert-value {
+      margin-top: 3px;
+      color: #a50e0e;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .summary-alert-sub {
+      margin-top: 2px;
+      color: #5f6368;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    /* Breakdown line under a summary tile value. */
+    .summary-sub {
+      margin-top: 2px;
+      color: #80868b;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    /* Itemised penalty list inside the leave-details modal. */
+    .penalty-breakdown {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border: 1px solid #edf0f2;
+      border-radius: 10px;
+    }
+
+    .penalty-breakdown-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #5f6368;
+      margin-bottom: 6px;
+    }
+
+    .penalty-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 0;
+      font-size: 12px;
+      color: #3c4043;
+    }
+
+    .penalty-line-total {
+      margin-top: 4px;
+      padding-top: 7px;
+      border-top: 1px solid #e4e7ea;
+      font-weight: 700;
+      color: #202124;
+    }
+
+    .penalty-line-note {
+      color: #80868b;
+      font-size: 10px;
+      line-height: 1.45;
+      padding-top: 2px;
+    }
+
     @media (max-width: 380px) {
       .employee-tools-row {
         grid-template-columns: 1fr 1fr 40px;
@@ -886,6 +1060,14 @@
               onclick="openLeaveDetailsModal()">
         <div class="summary-label">Leave days this month</div>
         <div id="summaryLeaveDays" class="summary-value">0</div>
+
+        <!--
+          Shown only when uninformed days exist, so the headline number
+          is never an unexplained total.
+        -->
+        <div id="summaryLeaveDaysBreak"
+             class="summary-sub"
+             style="display:none;"></div>
       </button>
 
       <button class="summary-item" type="button"
@@ -911,6 +1093,26 @@
       </button>
 
     </div>
+
+    <!--
+      Uninformed leave. Hidden entirely when there is none, so the card
+      stays quiet for employees it does not apply to.
+    -->
+    <button id="summaryUninformed"
+            class="summary-alert"
+            type="button"
+            style="display:none;"
+            onclick="openLeaveDetailsModal()">
+      <div class="summary-alert-label">
+        Uninformed leave
+      </div>
+      <div id="summaryUninformedValue"
+           class="summary-alert-value">
+        &mdash;
+      </div>
+      <div id="summaryUninformedDates"
+           class="summary-alert-sub"></div>
+    </button>
 
     <button class="summary-penalty" type="button"
             onclick="openLeaveDetailsModal()">
@@ -947,6 +1149,14 @@
       </div>
 
       <div id="leaveDetailsTotals" class="detail-totals"></div>
+
+      <!--
+        Itemised penalty. Populated only when there is a penalty to
+        explain, so a clean month shows nothing here.
+      -->
+      <div id="leaveDetailsPenalty"
+           class="penalty-breakdown"
+           style="display:none;"></div>
 
       <div id="leaveDetailsList" class="detail-list"></div>
 
@@ -2208,6 +2418,8 @@ const BACKEND_TIMEOUT_MS = 20000;
         summary.leavePenaltyThisMonth
       );
 
+    renderUninformedSummary_(summary);
+
     /* Real values are in place -- drop the placeholder styling. */
     [
       'summaryLeaveDays',
@@ -2223,6 +2435,145 @@ const BACKEND_TIMEOUT_MS = 20000;
       if (el) el.classList.remove('is-loading');
 
     });
+
+  }
+
+  /*
+   * Uninformed-leave strip + the breakdown line under the leave-days
+   * tile.
+   *
+   * The rule agreed for this feature is that a penalty is never folded
+   * silently into a bigger number, so when uninformed days exist the
+   * card states how many, what they cost, and on which dates -- with
+   * the full itemisation one tap away in the details modal.
+   */
+  function renderUninformedSummary_(summary) {
+
+    const strip =
+      document.getElementById(
+        'summaryUninformed'
+      );
+
+    const breakLine =
+      document.getElementById(
+        'summaryLeaveDaysBreak'
+      );
+
+    if (!strip || !breakLine) return;
+
+    const days =
+      Number(
+        summary.uninformedLeaveDaysThisMonth || 0
+      );
+
+    if (days <= 0) {
+
+      strip.style.display = 'none';
+      breakLine.style.display = 'none';
+      breakLine.textContent = '';
+
+      return;
+
+    }
+
+    const applied =
+      Number(
+        summary.appliedLeaveDaysThisMonth || 0
+      );
+
+    breakLine.textContent =
+      applied +
+      ' applied + ' +
+      days +
+      ' uninformed';
+
+    breakLine.style.display = 'block';
+
+    const breakdown =
+      summary.penaltyBreakdown || {};
+
+    const uninformedPenalty =
+      Number(breakdown.uninformed || 0);
+
+    const uninformedExcess =
+      Number(breakdown.uninformedExcess || 0);
+
+    document.getElementById(
+      'summaryUninformedValue'
+    ).textContent =
+      days +
+      ' day(s) \u00b7 ' +
+      money(
+        uninformedPenalty + uninformedExcess
+      );
+
+    const dates =
+      (summary.uninformedLeaveDates || []).map(
+        function(entry) {
+          return entry.date;
+        }
+      );
+
+    /*
+     * Only the first few dates are listed inline -- a long list would
+     * push the penalty total off a phone screen. The rest are reachable
+     * by tapping through, which the label states explicitly.
+     */
+    const shown =
+      dates.slice(0, 4);
+
+    let text =
+      shown.length
+        ? shown.map(formatDateKeyShort_).join(', ')
+        : '';
+
+    if (dates.length > shown.length) {
+      text +=
+        ' +' +
+        (dates.length - shown.length) +
+        ' more';
+    }
+
+    document.getElementById(
+      'summaryUninformedDates'
+    ).textContent =
+      text
+        ? text + ' \u2014 tap for details'
+        : 'Tap for details';
+
+    strip.style.display = 'block';
+
+  }
+
+  /* '2026-09-03' -> '3 Sep'. Falls back to the raw key if unparseable. */
+  function formatDateKeyShort_(dateKey) {
+
+    const key = String(dateKey || '');
+
+    const parts = key.split('-');
+
+    if (parts.length !== 3) return key;
+
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+
+    const monthIndex =
+      Number(parts[1]) - 1;
+
+    if (
+      !months[monthIndex] ||
+      isNaN(Number(parts[2]))
+    ) {
+      return key;
+    }
+
+    return (
+      Number(parts[2]) +
+      ' ' +
+      months[monthIndex]
+    );
 
   }
 
@@ -3409,6 +3760,19 @@ const BACKEND_TIMEOUT_MS = 20000;
 
   }
 
+  /*
+   * Rules & penalty modal.
+   *
+   * Everything rendered here comes from the Rules_Config sheet, so the
+   * wording, the ordering, the sections and which sections start open
+   * are all editable by HR without touching this file.
+   *
+   * The server sends `ruleSections` (grouped) and also keeps sending the
+   * old flat `rules` array. The flat array is used as a fallback so a
+   * browser holding a cached response from the previous version, or a
+   * spreadsheet without the new tab, still shows something rather than
+   * an empty modal.
+   */
   function renderRules() {
 
     const content =
@@ -3416,51 +3780,192 @@ const BACKEND_TIMEOUT_MS = 20000;
         'rulesContent'
       );
 
-    const rules =
-      (selfServiceConfig && selfServiceConfig.rules) || [];
+    if (!content) return;
+
+    const sections =
+      buildRuleSectionsForClient_();
 
     content.innerHTML = '';
 
-    if (!rules.length) {
+    if (!sections.length) {
 
       content.innerHTML =
         '<div class="rules-text">' +
         'No rules are currently configured.' +
         '</div>';
 
-    } else {
+      return;
 
-      rules.forEach(
-        function(rule) {
+    }
 
-          const row =
-            document.createElement(
-              'div'
-            );
+    sections.forEach(
+      function(section, index) {
 
-          row.className =
-            'rules-row';
+        content.appendChild(
+          buildRuleSectionElement_(
+            section,
+            index
+          )
+        );
 
-          row.innerHTML =
-            '<div class="rules-title">' +
-              escapeHtml(
-                rule.title || ''
-              ) +
-            '</div>' +
-            '<div class="rules-text">' +
-              escapeHtml(
-                rule.text || ''
-              ) +
-            '</div>';
+      }
+    );
 
-          content.appendChild(
-            row
+  }
+
+  /*
+   * Normalises whatever the server sent into a single grouped shape.
+   *
+   * Prefers ruleSections; falls back to wrapping the flat rules array in
+   * one open section.
+   */
+  function buildRuleSectionsForClient_() {
+
+    const config =
+      selfServiceConfig || {};
+
+    const sections =
+      config.ruleSections;
+
+    if (
+      sections &&
+      sections.length
+    ) {
+
+      return sections.filter(
+        function(section) {
+          return (
+            section &&
+            section.rules &&
+            section.rules.length
           );
-
         }
       );
 
     }
+
+    const flat =
+      config.rules || [];
+
+    if (!flat.length) return [];
+
+    return [{
+      section: 'Rules and penalties',
+      defaultExpanded: true,
+      rules: flat
+    }];
+
+  }
+
+  function buildRuleSectionElement_(
+    section,
+    index
+  ) {
+
+    const wrapper =
+      document.createElement('div');
+
+    wrapper.className =
+      'rules-section';
+
+    const open =
+      section.defaultExpanded === true;
+
+    if (open) {
+      wrapper.classList.add('is-open');
+    }
+
+    const bodyId =
+      'rulesSectionBody' + index;
+
+    /*
+     * A real <button> rather than a div with a click handler, so the
+     * header is keyboard reachable and Enter/Space toggle it for free.
+     */
+    const header =
+      document.createElement('button');
+
+    header.type = 'button';
+
+    header.className =
+      'rules-section-header';
+
+    header.setAttribute(
+      'aria-expanded',
+      open ? 'true' : 'false'
+    );
+
+    header.setAttribute(
+      'aria-controls',
+      bodyId
+    );
+
+    header.innerHTML =
+      '<span class="rules-section-name">' +
+        escapeHtml(
+          section.section || 'Rules'
+        ) +
+      '</span>' +
+      '<span class="rules-section-count">' +
+        section.rules.length +
+      '</span>' +
+      '<span class="rules-chevron" aria-hidden="true">' +
+        '&#9654;' +
+      '</span>';
+
+    const body =
+      document.createElement('div');
+
+    body.className =
+      'rules-section-body';
+
+    body.id = bodyId;
+
+    body.innerHTML =
+      section.rules.map(
+        function(rule) {
+
+          return (
+            '<div class="rules-row">' +
+              (
+                rule.title
+                  ? '<div class="rules-title">' +
+                      escapeHtml(rule.title) +
+                    '</div>'
+                  : ''
+              ) +
+              (
+                rule.text
+                  ? '<div class="rules-text">' +
+                      escapeHtml(rule.text) +
+                    '</div>'
+                  : ''
+              ) +
+            '</div>'
+          );
+
+        }
+      ).join('');
+
+    header.addEventListener(
+      'click',
+      function() {
+
+        const nowOpen =
+          wrapper.classList.toggle('is-open');
+
+        header.setAttribute(
+          'aria-expanded',
+          nowOpen ? 'true' : 'false'
+        );
+
+      }
+    );
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(body);
+
+    return wrapper;
 
   }
 
@@ -3547,6 +4052,21 @@ const BACKEND_TIMEOUT_MS = 20000;
 
     totalsEl.innerHTML = '';
 
+    /*
+     * Cleared up front, otherwise switching months would leave the
+     * previous month's itemised penalty on screen next to the new
+     * month's "Loading..." -- which reads as if it belonged to it.
+     */
+    const penaltyEl =
+      document.getElementById(
+        'leaveDetailsPenalty'
+      );
+
+    if (penaltyEl) {
+      penaltyEl.innerHTML = '';
+      penaltyEl.style.display = 'none';
+    }
+
     selfServiceJsonp(
       'getLeaveMonthDetails',
       { month: monthKey }
@@ -3586,6 +4106,165 @@ const BACKEND_TIMEOUT_MS = 20000;
 
   }
 
+  /*
+   * Itemised penalty block for the leave-details modal.
+   *
+   * Shows every component that contributed, each on its own line, so a
+   * total is never presented without its parts. Components worth zero
+   * are omitted rather than listed as a row of blanks -- except the
+   * total, which is always shown when anything at all was charged.
+   */
+  function renderPenaltyBreakdown_(data) {
+
+    const box =
+      document.getElementById(
+        'leaveDetailsPenalty'
+      );
+
+    if (!box) return;
+
+    const totals =
+      data.totals || {};
+
+    const total =
+      Number(totals.totalPenalty || 0);
+
+    if (total <= 0) {
+
+      box.style.display = 'none';
+      box.innerHTML = '';
+
+      return;
+
+    }
+
+    const applicationsPenalty =
+      Number(totals.applicationsPenalty || 0);
+
+    const uninformedPenalty =
+      Number(totals.uninformedPenalty || 0);
+
+    const uninformedExcess =
+      Number(totals.uninformedExcessPenalty || 0);
+
+    const uninformedDays =
+      Number(totals.uninformedLeaveDays || 0);
+
+    const daysOverLimit =
+      Number(totals.uninformedDaysOverLimit || 0);
+
+    let html =
+      '<div class="penalty-breakdown-title">' +
+        'How this penalty is made up' +
+      '</div>';
+
+    if (applicationsPenalty > 0) {
+      html +=
+        line_(
+          'Penalties on leave applications',
+          money(applicationsPenalty)
+        ) +
+        '<div class="penalty-line-note">' +
+          'Cutoff, excess and shift-capacity penalties. ' +
+          'Each application below shows its own split.' +
+        '</div>';
+    }
+
+    if (uninformedPenalty > 0) {
+      html +=
+        line_(
+          'Uninformed leave (' +
+            uninformedDays +
+            ' day(s))',
+          money(uninformedPenalty)
+        );
+    }
+
+    if (uninformedExcess > 0) {
+      html +=
+        line_(
+          'Excess leave on uninformed days (' +
+            daysOverLimit +
+            ' day(s))',
+          money(uninformedExcess)
+        ) +
+        '<div class="penalty-line-note">' +
+          'Uninformed days count towards your monthly leave ' +
+          'limit, so days beyond the limit also attract the ' +
+          'excess leave penalty.' +
+        '</div>';
+    }
+
+    html +=
+      '<div class="penalty-line penalty-line-total">' +
+        '<span>Total</span>' +
+        '<span>' + money(total) + '</span>' +
+      '</div>';
+
+    box.innerHTML = html;
+
+    box.style.display = 'block';
+
+    function line_(label, value) {
+      return (
+        '<div class="penalty-line">' +
+          '<span>' + escapeHtml(label) + '</span>' +
+          '<span>' + value + '</span>' +
+        '</div>'
+      );
+    }
+
+  }
+
+  /*
+   * One row per uninformed leave date, each with its own amount and any
+   * remark HR has written against it. This is the list an employee opens
+   * when they want to know which specific days they are paying for.
+   */
+  function renderUninformedDetailList_(entries) {
+
+    if (
+      !entries ||
+      !entries.length
+    ) {
+      return '';
+    }
+
+    return entries.map(
+      function(entry) {
+
+        return (
+          '<div class="detail-row">' +
+            '<div class="detail-row-main">' +
+              '<span>' +
+                escapeHtml(
+                  formatDateKeyShort_(entry.date)
+                ) +
+              '</span>' +
+              '<span class="detail-status warn">' +
+                'Uninformed' +
+              '</span>' +
+            '</div>' +
+            '<div class="detail-row-sub">' +
+              'Absent with no leave application' +
+              ' &middot; <b>' +
+              money(entry.penalty) +
+              '</b>' +
+              (
+                entry.remark
+                  ? '<br>HR remark: ' +
+                    escapeHtml(entry.remark)
+                  : ''
+              ) +
+            '</div>' +
+          '</div>'
+        );
+
+      }
+    ).join('');
+
+  }
+
   function renderLeaveDetails_(data) {
 
     const totals =
@@ -3596,12 +4275,25 @@ const BACKEND_TIMEOUT_MS = 20000;
         'leaveDetailsTotals'
       );
 
+    const uninformedDays =
+      Number(totals.uninformedLeaveDays || 0);
+
     totalsEl.innerHTML =
       '<div class="summary-item">' +
         '<div class="summary-label">Chargeable leave days</div>' +
         '<div class="summary-value">' +
           Number(totals.leaveDays || 0) +
         '</div>' +
+        (
+          uninformedDays > 0
+            ? '<div class="summary-sub">' +
+                Number(totals.appliedLeaveDays || 0) +
+                ' applied + ' +
+                uninformedDays +
+                ' uninformed' +
+              '</div>'
+            : ''
+        ) +
       '</div>' +
       '<div class="summary-item">' +
         '<div class="summary-label">Applications</div>' +
@@ -3622,6 +4314,8 @@ const BACKEND_TIMEOUT_MS = 20000;
         '</div>' +
       '</div>';
 
+    renderPenaltyBreakdown_(data);
+
     const listEl =
       document.getElementById(
         'leaveDetailsList'
@@ -3630,9 +4324,21 @@ const BACKEND_TIMEOUT_MS = 20000;
     const applications =
       data.applications || [];
 
+    /*
+     * Uninformed days are listed above the applications, with one line
+     * per date. They are not applications, so they cannot appear in the
+     * list below -- and if they were left out entirely the employee
+     * would see a penalty total with nothing to account for it.
+     */
+    const uninformedHtml =
+      renderUninformedDetailList_(
+        data.uninformedLeave || []
+      );
+
     if (!applications.length) {
 
       listEl.innerHTML =
+        uninformedHtml +
         '<div class="detail-empty">' +
         'No leave applications found for this month.' +
         '</div>';
@@ -3642,6 +4348,7 @@ const BACKEND_TIMEOUT_MS = 20000;
     }
 
     listEl.innerHTML =
+      uninformedHtml +
       applications.map(
         function(a) {
 
