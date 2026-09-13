@@ -283,7 +283,7 @@
 
     .employee-tools-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 42px;
+      grid-template-columns: 1fr 1fr 1fr 42px;
       gap: 8px;
     }
 
@@ -814,7 +814,7 @@
 
     @media (max-width: 380px) {
       .employee-tools-row {
-        grid-template-columns: 1fr 1fr 40px;
+        grid-template-columns: 1fr 1fr 1fr 40px;
       }
 
       .employee-tool-btn {
@@ -892,6 +892,12 @@
                 type="button"
                 onclick="openResignationModal()">
           Resignation
+        </button>
+
+        <button class="secondary employee-tool-btn"
+                type="button"
+                onclick="openLongLeaveModal()">
+          Long Leave
         </button>
 
         <button class="secondary employee-tool-btn employee-info-btn"
@@ -1117,12 +1123,13 @@
     <button class="summary-penalty" type="button"
             onclick="openLeaveDetailsModal()">
       <div class="summary-penalty-label">
-        Total leave penalty (tap for details)
+        Total penalty this month (tap for details)
       </div>
       <div id="summaryLeavePenalty"
            class="summary-penalty-value">
         &#8377;0
       </div>
+      <div id="summaryPenaltyBreakdown" class="summary-sub"></div>
     </button>
 
   </div>
@@ -1157,6 +1164,10 @@
       <div id="leaveDetailsPenalty"
            class="penalty-breakdown"
            style="display:none;"></div>
+
+      <div id="leaveDetailsLatePunch"
+           class="detail-list"
+           style="margin-bottom:12px;"></div>
 
       <div id="leaveDetailsList" class="detail-list"></div>
 
@@ -1339,6 +1350,68 @@
     </div>
 
     <div id="resignationConfirmView" class="hidden"></div>
+
+  </div>
+</div>
+
+
+<!-- =====================================================
+     LONG LEAVE MODAL
+     ===================================================== -->
+<div id="longLeaveModal"
+     class="modal-backdrop"
+     onclick="backdropClose(event,'longLeaveModal')">
+
+  <div class="self-modal">
+
+    <div id="longLeaveFormView">
+
+      <div class="modal-header">
+        <h2 class="modal-title">Long Leave</h2>
+        <button class="modal-close" type="button"
+                onclick="closeModal('longLeaveModal')">&times;</button>
+      </div>
+
+      <div class="warning-box">
+        &#9888;&#65039; <b>Please read before applying.</b><br>
+        Standard resignation rules and penalty apply to long leave.
+        You must vacate accommodation before your shift start time on
+        the start day of this leave. You will be accepted back only if
+        accommodation vacancy is available on the day of your return.
+        Please contact your supervisor before returning to avoid chaos.
+      </div>
+
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label" for="longLeaveStart">Leave start date</label>
+        <input type="date" id="longLeaveStart" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="longLeaveEnd">Leave end date</label>
+        <input type="date" id="longLeaveEnd" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="longLeaveReason">Reason category</label>
+        <select id="longLeaveReason" class="form-control">
+          <option value="">Select reason</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="longLeaveDetailedReason">Detailed reason</label>
+        <textarea id="longLeaveDetailedReason" class="form-control"></textarea>
+      </div>
+
+      <div id="longLeaveMessage" class="form-message"></div>
+
+      <button class="primary" type="button" onclick="reviewLongLeave()">
+        Review &amp; Calculate Penalty
+      </button>
+
+    </div>
+
+    <div id="longLeaveConfirmView" class="hidden"></div>
 
   </div>
 </div>
@@ -1803,6 +1876,7 @@ const BACKEND_TIMEOUT_MS = 20000;
   let selfServiceBootstrapReady = false;
   let pendingLeave = null;
   let pendingResignation = null;
+  let pendingLongLeave = null;
   let pendingLeaveProof = null;
 
   function localTodayKey() {
@@ -2415,8 +2489,19 @@ const BACKEND_TIMEOUT_MS = 20000;
       'summaryLeavePenalty'
     ).textContent =
       money(
-        summary.leavePenaltyThisMonth
+        summary.totalPenaltyThisMonth != null
+          ? summary.totalPenaltyThisMonth
+          : summary.leavePenaltyThisMonth
       );
+
+    const breakdownEl = document.getElementById('summaryPenaltyBreakdown');
+    if (breakdownEl) {
+      breakdownEl.textContent =
+        'Leave: ' + money(summary.leavePenaltyThisMonth) +
+        ' · Late punch: ' + money(summary.latePunchPenaltyThisMonth) +
+        ' · Uninformed: ' + money((summary.penaltyBreakdown || {}).uninformed || 0) +
+        ' · Uninformed excess: ' + money((summary.penaltyBreakdown || {}).uninformedExcess || 0);
+    }
 
     renderUninformedSummary_(summary);
 
@@ -3554,6 +3639,151 @@ const BACKEND_TIMEOUT_MS = 20000;
 
   }
 
+  /* =====================================================
+     LONG LEAVE
+     ===================================================== */
+
+  function openLongLeaveModal() {
+
+    if (!googleIdToken) return;
+
+    closeAllModals();
+
+    const today = localTodayKey();
+
+    document.getElementById('longLeaveStart').min = today;
+    document.getElementById('longLeaveEnd').min = today;
+    document.getElementById('longLeaveStart').value = '';
+    document.getElementById('longLeaveEnd').value = '';
+    document.getElementById('longLeaveReason').value = '';
+    document.getElementById('longLeaveDetailedReason').value = '';
+    document.getElementById('longLeaveFormView').classList.remove('hidden');
+    document.getElementById('longLeaveConfirmView').classList.add('hidden');
+    setFormMessage('longLeaveMessage', '', '');
+
+    /* Reuse the configurable resignation reason categories. */
+    const reason = document.getElementById('longLeaveReason');
+    reason.innerHTML = '<option value="">Select reason</option>';
+    (selfServiceConfig && selfServiceConfig.resignationReasons || []).forEach(function(item) {
+      const option = document.createElement('option');
+      option.value = item;
+      option.textContent = item;
+      reason.appendChild(option);
+    });
+
+    document.getElementById('longLeaveModal').classList.add('show');
+  }
+
+  function reviewLongLeave() {
+
+    const start = document.getElementById('longLeaveStart').value;
+    const end = document.getElementById('longLeaveEnd').value;
+    const reason = document.getElementById('longLeaveReason').value;
+    const detail = document.getElementById('longLeaveDetailedReason').value.trim();
+
+    if (!start || !end || !reason || !detail) {
+      setFormMessage('longLeaveMessage', 'Please complete all required fields.', 'error');
+      return;
+    }
+    if (end < start) {
+      setFormMessage('longLeaveMessage', 'Leave end date cannot be before the start date.', 'error');
+      return;
+    }
+
+    setFormMessage('longLeaveMessage', 'Checking notice period and penalty...', 'info');
+
+    selfServiceJsonp('previewLongLeave', {
+      startDate: start,
+      endDate: end,
+      reasonCategory: reason,
+      detailedReason: detail
+    })
+      .then(function(result) {
+        if (!result || !result.success) {
+          throw new Error(result && result.message ? result.message : 'Unable to calculate long-leave penalty.');
+        }
+        pendingLongLeave = result.preview || result;
+        showLongLeaveConfirmation(pendingLongLeave, detail);
+      })
+      .catch(function(error) {
+        setFormMessage('longLeaveMessage', error && error.message ? error.message : String(error), 'error');
+      });
+  }
+
+  function showLongLeaveConfirmation(p, detail) {
+
+    const view = document.getElementById('longLeaveConfirmView');
+    document.getElementById('longLeaveFormView').classList.add('hidden');
+    view.classList.remove('hidden');
+
+    const penalty = Number(p.penalty || 0);
+
+    view.innerHTML =
+      '<div class="modal-header">' +
+        '<h2 class="modal-title">Confirm Long Leave</h2>' +
+        '<button class="modal-close" type="button" onclick="closeModal(\'longLeaveModal\')">&times;</button>' +
+      '</div>' +
+      '<div class="warning-box">' +
+        '&#9888;&#65039; <b>Important accommodation condition</b><br>' +
+        'Vacate accommodation before shift start on <b>' + escapeHtml(p.startDate) + '</b>. ' +
+        'Return/accommodation re-entry is subject to vacancy on <b>' + escapeHtml(p.returnDate) + '</b>. ' +
+        'Please contact your supervisor before returning.' +
+      '</div>' +
+      '<div class="confirmation-box" style="margin-top:12px;">' +
+        '<b>Leave:</b> ' + escapeHtml(p.startDate) + ' to ' + escapeHtml(p.endDate) +
+        '<br><b>Return date:</b> ' + escapeHtml(p.returnDate) +
+        '<br><b>Shift start:</b> ' + escapeHtml(p.shiftStartTime || 'Not configured') +
+        '<br><b>Notice given:</b> ' + Number(p.noticeDays || 0) + ' day(s)' +
+        '<br><b>Required notice:</b> ' + Number(p.requiredNoticeDays || 0) + ' day(s)' +
+        '<br><b>Reason:</b> ' + escapeHtml(p.reasonCategory) +
+      '</div>' +
+      (penalty > 0
+        ? '<div class="warning-box">&#9888;&#65039; <b>Short-notice penalty applies:</b> ' + money(penalty) + '. Standard resignation penalty rules are being applied.</div>'
+        : '<div style="margin-top:12px;font-size:13px;">No short-notice penalty is currently applicable.</div>') +
+      '<div class="modal-actions">' +
+        '<button class="secondary" type="button" onclick="cancelLongLeaveReview()">Cancel</button>' +
+        '<button class="primary" type="button" onclick="submitLongLeaveConfirmed()">Confirm &amp; Submit</button>' +
+      '</div>';
+
+    view.dataset.detailReason = detail;
+  }
+
+  function cancelLongLeaveReview() {
+    pendingLongLeave = null;
+    document.getElementById('longLeaveConfirmView').classList.add('hidden');
+    document.getElementById('longLeaveFormView').classList.remove('hidden');
+  }
+
+  function submitLongLeaveConfirmed() {
+    if (!pendingLongLeave) return;
+
+    const p = pendingLongLeave;
+    const detail = document.getElementById('longLeaveConfirmView').dataset.detailReason || '';
+    const reason = document.getElementById('longLeaveReason').value;
+    const buttons = document.querySelectorAll('#longLeaveConfirmView button');
+    buttons.forEach(function(button) { button.disabled = true; });
+
+    postSelfService('submitLongLeave', {
+      confirmed: 'true',
+      startDate: p.startDate,
+      endDate: p.endDate,
+      reasonCategory: reason,
+      detailedReason: detail
+    })
+      .then(function() {
+        closeModal('longLeaveModal');
+        pendingLongLeave = null;
+        alert(p.penalty > 0
+          ? 'Long leave application submitted. Applicable penalty: ' + money(p.penalty) + '.'
+          : 'Long leave application submitted successfully.');
+        buttons.forEach(function(button) { button.disabled = false; });
+      })
+      .catch(function(error) {
+        buttons.forEach(function(button) { button.disabled = false; });
+        alert(error && error.message ? error.message : String(error));
+      });
+  }
+
   function postSelfService(
     action,
     data
@@ -3989,7 +4219,8 @@ const BACKEND_TIMEOUT_MS = 20000;
       'resignationModal',
       'infoModal',
       'leaveDetailsModal',
-      'resignationHistoryModal'
+      'resignationHistoryModal',
+      'longLeaveModal'
     ].forEach(
       function(id) {
         closeModal(id);
@@ -4066,6 +4297,8 @@ const BACKEND_TIMEOUT_MS = 20000;
       penaltyEl.innerHTML = '';
       penaltyEl.style.display = 'none';
     }
+    const latePunchEl = document.getElementById('leaveDetailsLatePunch');
+    if (latePunchEl) latePunchEl.innerHTML = '';
 
     selfServiceJsonp(
       'getLeaveMonthDetails',
@@ -4141,6 +4374,9 @@ const BACKEND_TIMEOUT_MS = 20000;
     const applicationsPenalty =
       Number(totals.applicationsPenalty || 0);
 
+    const latePunchPenalty =
+      Number(totals.latePunchPenalty || 0);
+
     const uninformedPenalty =
       Number(totals.uninformedPenalty || 0);
 
@@ -4157,6 +4393,15 @@ const BACKEND_TIMEOUT_MS = 20000;
       '<div class="penalty-breakdown-title">' +
         'How this penalty is made up' +
       '</div>';
+
+    if (latePunchPenalty > 0) {
+      html +=
+        line_(
+          'Late punch-in penalty (' + Number(totals.latePunchCount || 0) + ' punch(es))',
+          money(latePunchPenalty)
+        ) +
+        '<div class="penalty-line-note">More than the configured 30-minute grace period after shift start.</div>';
+    }
 
     if (applicationsPenalty > 0) {
       html +=
@@ -4265,6 +4510,18 @@ const BACKEND_TIMEOUT_MS = 20000;
 
   }
 
+  function renderLatePunchDetailList_(entries) {
+    if (!entries || !entries.length) return '';
+    return '<div class="penalty-breakdown-title">Late punch-ins</div>' + entries.map(function(entry) {
+      return '<div class="detail-row">' +
+        '<div class="detail-row-main"><span>' + escapeHtml(formatDateKeyShort_(entry.date)) + '</span>' +
+        '<span class="detail-status warn">Late login</span></div>' +
+        '<div class="detail-row-sub">Login: <b>' + escapeHtml(entry.loginTime) + '</b> · Shift start: ' + escapeHtml(entry.shiftStartTime) +
+        ' · ' + Number(entry.minutesLate || 0) + ' min late · <b>' + money(entry.penalty) + '</b></div>' +
+      '</div>';
+    }).join('');
+  }
+
   function renderLeaveDetails_(data) {
 
     const totals =
@@ -4315,6 +4572,11 @@ const BACKEND_TIMEOUT_MS = 20000;
       '</div>';
 
     renderPenaltyBreakdown_(data);
+
+    const latePunchEl = document.getElementById('leaveDetailsLatePunch');
+    if (latePunchEl) {
+      latePunchEl.innerHTML = renderLatePunchDetailList_(data.latePunchEntries || []);
+    }
 
     const listEl =
       document.getElementById(
