@@ -1374,7 +1374,8 @@
 
       <div class="warning-box">
         &#9888;&#65039; <b>Please read before applying.</b><br>
-        Standard resignation rules and penalty apply to long leave.
+        Standard resignation rules and penalty apply to long leave.<br>
+        Long leave must be at least <b><span id="longLeaveMinimumDays">3</span> days</b>.<br>
         You must vacate accommodation before your shift start time on
         the start day of this leave. You will be accepted back only if
         accommodation vacancy is available on the day of your return.
@@ -3661,15 +3662,18 @@ const BACKEND_TIMEOUT_MS = 20000;
     document.getElementById('longLeaveConfirmView').classList.add('hidden');
     setFormMessage('longLeaveMessage', '', '');
 
-    /* Reuse the configurable resignation reason categories. */
+    /* Long-leave reasons are deliberately separate from resignation reasons. */
     const reason = document.getElementById('longLeaveReason');
     reason.innerHTML = '<option value="">Select reason</option>';
-    (selfServiceConfig && selfServiceConfig.resignationReasons || []).forEach(function(item) {
+    (selfServiceConfig && selfServiceConfig.longLeaveReasons || []).forEach(function(item) {
       const option = document.createElement('option');
       option.value = item;
       option.textContent = item;
       reason.appendChild(option);
     });
+
+    const minDaysEl = document.getElementById('longLeaveMinimumDays');
+    if (minDaysEl) minDaysEl.textContent = Number(selfServiceConfig && selfServiceConfig.longLeaveMinimumDays || 3);
 
     document.getElementById('longLeaveModal').classList.add('show');
   }
@@ -3687,6 +3691,21 @@ const BACKEND_TIMEOUT_MS = 20000;
     }
     if (end < start) {
       setFormMessage('longLeaveMessage', 'Leave end date cannot be before the start date.', 'error');
+      return;
+    }
+
+    const startDateObj = new Date(start + 'T00:00:00');
+    const endDateObj = new Date(end + 'T00:00:00');
+    const durationDays = Math.round((endDateObj - startDateObj) / 86400000) + 1;
+    const minimumDurationDays = Number(
+      selfServiceConfig && selfServiceConfig.longLeaveMinimumDays || 3
+    );
+    if (durationDays < minimumDurationDays) {
+      setFormMessage(
+        'longLeaveMessage',
+        'Long leave must be at least ' + minimumDurationDays + ' days.',
+        'error'
+      );
       return;
     }
 
@@ -3735,6 +3754,7 @@ const BACKEND_TIMEOUT_MS = 20000;
         '<br><b>Shift start:</b> ' + escapeHtml(p.shiftStartTime || 'Not configured') +
         '<br><b>Notice given:</b> ' + Number(p.noticeDays || 0) + ' day(s)' +
         '<br><b>Required notice:</b> ' + Number(p.requiredNoticeDays || 0) + ' day(s)' +
+        '<br><b>Duration:</b> ' + escapeHtml(p.leaveDays || '') + ' day(s)' +
         '<br><b>Reason:</b> ' + escapeHtml(p.reasonCategory) +
       '</div>' +
       (penalty > 0
