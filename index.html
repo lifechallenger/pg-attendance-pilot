@@ -1064,7 +1064,7 @@
 
       <button class="summary-item" type="button"
               onclick="openLeaveDetailsModal()">
-        <div class="summary-label">Leave days this month</div>
+        <div class="summary-label">Leaves taken this month</div>
         <div id="summaryLeaveDays" class="summary-value">0</div>
 
         <!--
@@ -1084,7 +1084,7 @@
 
       <button class="summary-item" type="button"
               onclick="openLeaveDetailsModal()">
-        <div class="summary-label">Accepted applications</div>
+        <div class="summary-label">Leave quota remaining this month</div>
         <div id="summaryAccepted" class="summary-value">0 / 2</div>
       </button>
 
@@ -2469,16 +2469,36 @@ const BACKEND_TIMEOUT_MS = 20000;
         summary.leaveApplicationsThisMonth || 0
       );
 
+    const monthlyLeaveLimit =
+      Number(summary.monthlyLeaveLimit || 0);
+
+    /*
+     * Leave quota is consumed by accepted/chargeable leave applications
+     * plus uninformed leave days. Attendance Not Marked is deliberately
+     * excluded from quota usage.
+     *
+     * The backend's legacy acceptedLeaveApplicationsThisMonth field now
+     * represents this combined quota usage for compatibility.
+     */
+    const monthlyQuotaUsed =
+      Number(
+        summary.monthlyQuotaUsed != null
+          ? summary.monthlyQuotaUsed
+          : summary.acceptedLeaveApplicationsThisMonth || 0
+      );
+
+    const monthlyQuotaRemaining =
+      Math.max(
+        0,
+        monthlyLeaveLimit - monthlyQuotaUsed
+      );
+
     document.getElementById(
       'summaryAccepted'
     ).textContent =
-      Number(
-        summary.acceptedLeaveApplicationsThisMonth || 0
-      ) +
+      monthlyQuotaRemaining +
       ' / ' +
-      Number(
-        summary.monthlyLeaveLimit || 0
-      );
+      monthlyLeaveLimit;
 
     document.getElementById(
       'summaryResignation'
