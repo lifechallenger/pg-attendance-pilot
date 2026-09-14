@@ -2517,11 +2517,13 @@ const BACKEND_TIMEOUT_MS = 20000;
 
     const breakdownEl = document.getElementById('summaryPenaltyBreakdown');
     if (breakdownEl) {
+      const penaltyBreakdown = summary.penaltyBreakdown || {};
       breakdownEl.textContent =
         'Leave: ' + money(summary.leavePenaltyThisMonth) +
         ' · Late punch: ' + money(summary.latePunchPenaltyThisMonth) +
-        ' · Uninformed: ' + money((summary.penaltyBreakdown || {}).uninformed || 0) +
-        ' · Uninformed excess: ' + money((summary.penaltyBreakdown || {}).uninformedExcess || 0);
+        ' · Room attendance: ' + money(penaltyBreakdown.attendanceNotMarked || summary.attendanceNotMarkedPenaltyThisMonth || 0) +
+        ' · Uninformed leave: ' + money(penaltyBreakdown.uninformed || 0) +
+        ' · Uninformed excess: ' + money(penaltyBreakdown.uninformedExcess || 0);
     }
 
     renderUninformedSummary_(summary);
